@@ -2,7 +2,28 @@ import { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { GameState, PlayerId, Color, PlayerAction } from '@sardegna/shared';
 
+
+const PROVINCE_COORDS = {
+  p1: { x: 200, y: 100 },
+  p2: { x: 350, y: 120 },
+  p3: { x: 500, y: 150 },
+  p4: { x: 220, y: 220 },
+  p5: { x: 350, y: 240 },
+  p6: { x: 480, y: 270 },
+  p7: { x: 600, y: 300 },
+  p8: { x: 230, y: 340 },
+  p9: { x: 360, y: 360 },
+  p10: { x: 490, y: 390 },
+  p11: { x: 610, y: 420 },
+  p12: { x: 250, y: 460 },
+  p13: { x: 380, y: 480 },
+  p14: { x: 510, y: 510 },
+  p15: { x: 270, y: 580 },
+  p16: { x: 400, y: 600 }
+};
+
 const socket: Socket = io(import.meta.env.VITE_SERVER_URL || window.location.origin);
+
 
 function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -147,41 +168,83 @@ function App() {
       <main className="flex-grow flex p-4 gap-4 overflow-hidden">
         
         {/* Left: Board View Placeholder */}
-        <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto">
-          <h2 className="text-2xl font-bold mb-4 text-center">Board View</h2>
-          <div className="grid grid-cols-4 gap-4 p-4">
-            {Object.values(gameState.provinces).map(province => {
+        <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto min-w-[800px] min-h-[800px]">
+          <h2 className="text-2xl font-bold mb-4 absolute top-4 left-4 z-10">Board View (Island of Sardegna)</h2>
+          
+          <svg className="w-full h-full absolute top-0 left-0" viewBox="0 0 800 800">
+            {/* Draw edges between adjacent provinces */}
+            {Object.values(gameState.provinces).map((province) => {
+              return province.adjacentProvinces.map(adjId => {
+                // only draw one direction to avoid duplicate lines
+                if (province.id < adjId) {
+                  const p1 = PROVINCE_COORDS[province.id as keyof typeof PROVINCE_COORDS];
+                  const p2 = PROVINCE_COORDS[adjId as keyof typeof PROVINCE_COORDS];
+                  if (!p1 || !p2) return null;
+                  return (
+                    <line 
+                      key={`${province.id}-${adjId}`}
+                      x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} 
+                      stroke="#888" strokeWidth="4" strokeDasharray="5,5"
+                    />
+                  );
+                }
+                return null;
+              });
+            })}
+
+            {/* Draw nodes */}
+            {Object.values(gameState.provinces).map((province) => {
+              const p = PROVINCE_COORDS[province.id as keyof typeof PROVINCE_COORDS];
+              if (!p) return null;
+              
               const bgColors = {
-                'wheat': 'bg-yellow-200',
-                'wine_olive': 'bg-green-300',
-                'thyme_cheese': 'bg-yellow-700 text-white'
+                'wheat': '#fef08a', // yellow-200
+                'wine_olive': '#86efac', // green-300
+                'thyme_cheese': '#a16207' // yellow-700
               };
               
+              const textColor = province.resource === 'thyme_cheese' ? 'white' : 'black';
+
               return (
-                <div key={province.id} className={`p-4 rounded shadow ${bgColors[province.resource]} border-2 border-gray-400 min-h-[120px]`}>
-                  <h3 className="font-bold border-b border-gray-400 mb-2">{province.name}</h3>
-                  <div className="text-xs mb-1 opacity-70 uppercase tracking-widest">{province.resource.replace('_', ' ')}</div>
-                  <div className="flex flex-wrap gap-1 mt-2">
+                <g key={province.id} transform={`translate(${p.x}, ${p.y})`}>
+                  <circle r="45" fill={bgColors[province.resource]} stroke="#4b5563" strokeWidth="3" />
+                  <text y="-10" textAnchor="middle" fill={textColor} fontSize="12" fontWeight="bold">
+                    {province.name}
+                  </text>
+                  <text y="5" textAnchor="middle" fill={textColor} fontSize="8" opacity="0.8">
+                    {province.resource.replace('_', ' ').toUpperCase()}
+                  </text>
+                  
+                  {/* Pieces */}
+                  <g transform="translate(-25, 15)">
                     {province.pieces.map((piece: any, idx: number) => {
-                      const owner = gameState.players.find(p => p.id === piece.playerId);
-                      const colorMap = {
-                        red: 'bg-red-500',
-                        blue: 'bg-blue-500',
-                        yellow: 'bg-yellow-400',
-                        green: 'bg-green-500'
+                      const owner = gameState.players.find(pl => pl.id === piece.playerId);
+                      const colorMap: Record<string, string> = {
+                        red: '#ef4444',
+                        blue: '#3b82f6',
+                        yellow: '#facc15',
+                        green: '#22c55e'
                       };
+                      const fill = colorMap[owner?.color || 'red'];
+                      
+                      // Wrap pieces into multiple rows if needed
+                      const x = (idx % 5) * 12;
+                      const y = Math.floor(idx / 5) * 12;
+                      
                       return (
-                         <div key={idx} title={piece.type} className={`w-4 h-4 rounded-full ${colorMap[owner?.color || 'red']} border border-black shadow-sm`}></div>
-                      )
+                        <circle key={idx} cx={x} cy={y} r="5" fill={fill} stroke="black" strokeWidth="1">
+                          <title>{piece.type} ({owner?.name})</title>
+                        </circle>
+                      );
                     })}
-                  </div>
-                </div>
+                  </g>
+                </g>
               );
             })}
-          </div>
+          </svg>
 
           {gameState.phase === 'lobby' && (
-            <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded shadow z-10 text-center">
+            <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded shadow z-20 text-center">
               <h3 className="text-lg font-bold mb-2">Lobby</h3>
               <p className="mb-4">{gameState.players.length}/4 Players Joined</p>
               <div className="flex justify-center gap-2">

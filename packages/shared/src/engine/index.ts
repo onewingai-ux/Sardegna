@@ -1,25 +1,41 @@
 import { GameState, Player, PlayerId, CharacterCard, Province, GamePhase, FortCard } from '../types';
 
+// The island of Sardegna is roughly rectangular with a north/south split.
+// We assign exact topology matching the 16 regions.
+const ISLAND_TOPOLOGY = [
+  { id: 'p1', name: 'Sassari', resource: 'wine_olive', adj: ['p2', 'p5'] },
+  { id: 'p2', name: 'Castelsardo', resource: 'thyme_cheese', adj: ['p1', 'p3', 'p5', 'p6'] },
+  { id: 'p3', name: 'Olbia', resource: 'wine_olive', adj: ['p2', 'p4', 'p6'] },
+  { id: 'p4', name: 'Alghero', resource: 'wine_olive', adj: ['p3', 'p7', 'p8'] },
+  { id: 'p5', name: 'Bosa', resource: 'wheat', adj: ['p1', 'p2', 'p6', 'p9'] },
+  { id: 'p6', name: 'Macomer', resource: 'thyme_cheese', adj: ['p2', 'p3', 'p5', 'p7', 'p9', 'p10'] },
+  { id: 'p7', name: 'Nuoro', resource: 'wine_olive', adj: ['p4', 'p6', 'p8', 'p10'] },
+  { id: 'p8', name: 'Dorgali', resource: 'thyme_cheese', adj: ['p4', 'p7', 'p11'] },
+  { id: 'p9', name: 'Oristano', resource: 'wheat', adj: ['p5', 'p6', 'p10', 'p12'] },
+  { id: 'p10', name: 'Sorgono', resource: 'wine_olive', adj: ['p6', 'p7', 'p9', 'p11', 'p12', 'p13'] },
+  { id: 'p11', name: 'Lanusei', resource: 'thyme_cheese', adj: ['p8', 'p10', 'p13', 'p14'] },
+  { id: 'p12', name: 'Iglesias', resource: 'wine_olive', adj: ['p9', 'p10', 'p13', 'p15'] },
+  { id: 'p13', name: 'Sanluri', resource: 'thyme_cheese', adj: ['p10', 'p11', 'p12', 'p14', 'p15', 'p16'] },
+  { id: 'p14', name: 'Muravera', resource: 'wine_olive', adj: ['p11', 'p13', 'p16'] },
+  { id: 'p15', name: 'Carbonia', resource: 'wine_olive', adj: ['p12', 'p13', 'p16'] },
+  { id: 'p16', name: 'Cagliari', resource: 'thyme_cheese', adj: ['p13', 'p14', 'p15'] }
+];
+
 export function createNewGame(id: string): GameState {
   
-  // Scaffolding a basic 4x4 grid representation for the 16 provinces
   const provinces: Record<string, Province> = {};
-  for (let i = 0; i < 16; i++) {
-    const id = `p${i + 1}`;
-    let resource: 'wheat' | 'wine_olive' | 'thyme_cheese' = 'thyme_cheese';
-    if (i < 2) resource = 'wheat';
-    else if (i < 10) resource = 'wine_olive';
-    
-    provinces[id] = {
-      id,
-      name: `Province ${i + 1}`,
-      resource,
+  
+  ISLAND_TOPOLOGY.forEach(t => {
+    provinces[t.id] = {
+      id: t.id,
+      name: t.name,
+      resource: t.resource as any,
       pieces: [],
-      adjacentProvinces: [],
+      adjacentProvinces: t.adj,
       adjacentHarbors: [],
       adjacentFortSpaces: []
     };
-  }
+  });
 
   return {
     id,
@@ -50,7 +66,7 @@ export function startGame(state: GameState): GameState {
   for (let i = 0; i < 11; i++) {
     state.fortCardRow.push({
       id: `fc${i + 1}`,
-      scoringProvinceIds: [`p${(i % 16) + 1}`, `p${((i+1) % 16) + 1}`]
+      scoringProvinceIds: [ISLAND_TOPOLOGY[i % 16].id, ISLAND_TOPOLOGY[(i+1) % 16].id]
     });
   }
   
@@ -86,12 +102,12 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
     state.log.push(`Player ${player.name} played ${card.name}`);
 
     // Let's add a fake piece placement so the board changes visually
-    const randomProvince = `p${Math.floor(Math.random() * 16) + 1}`;
+    const randomProvince = ISLAND_TOPOLOGY[Math.floor(Math.random() * 16)].id;
     state.provinces[randomProvince].pieces.push({
       playerId: player.id,
       type: 'villager'
     });
-    state.log.push(`${player.name} placed a villager in Province ${randomProvince.substring(1)}`);
+    state.log.push(`${player.name} placed a villager in ${state.provinces[randomProvince].name}`);
 
     // Immediately resolve Sentinel
     if (card.effectType === 'sentinel') {
