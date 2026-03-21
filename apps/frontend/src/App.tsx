@@ -324,7 +324,7 @@ function App() {
         )}
         
         {currentPlayer && (
-          <div className="flex gap-2 overflow-x-auto w-full max-w-4xl px-4">
+          <div className="flex gap-4 overflow-x-auto overflow-y-hidden w-full max-w-full px-4 pb-2 justify-center">
             {currentPlayer.availableCards.map(card => (
               <button
                 key={card.id}
@@ -337,6 +337,14 @@ function App() {
                 <div className="text-xs font-mono text-gray-400 text-right">{card.effectType}</div>
               </button>
             ))}
+            
+            {currentPlayer.playedCard && (
+              <div className="flex-shrink-0 w-32 h-40 bg-blue-100 border-2 border-blue-400 rounded-lg shadow flex flex-col p-2 opacity-75">
+                <div className="font-bold text-sm text-center border-b pb-1 mb-1 text-blue-900">{currentPlayer.playedCard.name}</div>
+                <div className="text-xs text-blue-700 flex-grow">{currentPlayer.playedCard.effectDescription}</div>
+                <div className="text-xs font-bold text-blue-800 text-center uppercase mt-auto pb-1">PLAYED</div>
+              </div>
+            )}
           </div>
         )}
       </footer>
