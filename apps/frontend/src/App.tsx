@@ -148,9 +148,37 @@ function App() {
         
         {/* Left: Board View Placeholder */}
         <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto">
-          <h2 className="text-2xl font-bold mb-4 opacity-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            Board View (16 Provinces)
-          </h2>
+          <h2 className="text-2xl font-bold mb-4 text-center">Board View</h2>
+          <div className="grid grid-cols-4 gap-4 p-4">
+            {Object.values(gameState.provinces).map(province => {
+              const bgColors = {
+                'wheat': 'bg-yellow-200',
+                'wine_olive': 'bg-green-300',
+                'thyme_cheese': 'bg-yellow-700 text-white'
+              };
+              
+              return (
+                <div key={province.id} className={`p-4 rounded shadow ${bgColors[province.resource]} border-2 border-gray-400 min-h-[120px]`}>
+                  <h3 className="font-bold border-b border-gray-400 mb-2">{province.name}</h3>
+                  <div className="text-xs mb-1 opacity-70 uppercase tracking-widest">{province.resource.replace('_', ' ')}</div>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {province.pieces.map((piece: any, idx: number) => {
+                      const owner = gameState.players.find(p => p.id === piece.playerId);
+                      const colorMap = {
+                        red: 'bg-red-500',
+                        blue: 'bg-blue-500',
+                        yellow: 'bg-yellow-400',
+                        green: 'bg-green-500'
+                      };
+                      return (
+                         <div key={idx} title={piece.type} className={`w-4 h-4 rounded-full ${colorMap[owner?.color || 'red']} border border-black shadow-sm`}></div>
+                      )
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
           {gameState.phase === 'lobby' && (
             <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded shadow z-10 text-center">
@@ -185,7 +213,20 @@ function App() {
              <h3 className="font-bold border-b mb-2 pb-1">Fort Cards</h3>
              <p className="text-sm">Deck: {gameState.fortCardDeck.length}</p>
              <p className="text-sm">Row: {gameState.fortCardRow.length}</p>
-             {/* Render active fort cards... */}
+             <div className="flex gap-2 overflow-x-auto mt-2 pb-2">
+               {gameState.fortCardRow.slice(0, gameState.faceUpFortCards).map((card: any) => (
+                 <div key={card.id} className="min-w-[80px] h-24 bg-white border-2 border-orange-400 rounded shadow-md p-1 flex flex-col justify-between text-xs text-center">
+                   <div className="font-bold border-b pb-1 mb-1">{card.id.toUpperCase()}</div>
+                   <div className="text-[10px] text-gray-600">Scores:</div>
+                   <div className="font-bold text-gray-800">{card.scoringProvinceIds.map((pid: string) => pid.replace('p', 'P')).join(', ')}</div>
+                 </div>
+               ))}
+               {gameState.fortCardRow.slice(gameState.faceUpFortCards).map((_card: any, idx: number) => (
+                 <div key={idx} className="min-w-[80px] h-24 bg-blue-800 border-2 border-blue-900 rounded shadow-md p-2 flex items-center justify-center text-blue-200 opacity-80">
+                   Back
+                 </div>
+               ))}
+             </div>
            </div>
 
            {/* Action Log */}

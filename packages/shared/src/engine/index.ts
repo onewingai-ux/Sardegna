@@ -1,13 +1,33 @@
 import { GameState, Player, PlayerId, CharacterCard, Province, GamePhase, FortCard } from '../types';
 
 export function createNewGame(id: string): GameState {
+  
+  // Scaffolding a basic 4x4 grid representation for the 16 provinces
+  const provinces: Record<string, Province> = {};
+  for (let i = 0; i < 16; i++) {
+    const id = `p${i + 1}`;
+    let resource: 'wheat' | 'wine_olive' | 'thyme_cheese' = 'thyme_cheese';
+    if (i < 2) resource = 'wheat';
+    else if (i < 10) resource = 'wine_olive';
+    
+    provinces[id] = {
+      id,
+      name: `Province ${i + 1}`,
+      resource,
+      pieces: [],
+      adjacentProvinces: [],
+      adjacentHarbors: [],
+      adjacentFortSpaces: []
+    };
+  }
+
   return {
     id,
     phase: 'lobby',
     players: [],
     activePlayerId: null,
     playerOrder: [],
-    provinces: {}, // Would be populated from a constant board topology file
+    provinces,
     harbors: {},
     fortSpaces: {},
     fortCardDeck: [], // Shuffled 26
@@ -25,7 +45,15 @@ export function startGame(state: GameState): GameState {
   state.phase = 'playing';
   state.activePlayerId = state.players[0].id;
   state.playerOrder = state.players.map(p => p.id);
+  
   // Setup logic: shuffle deck, deal 11 to row, face up 2, etc.
+  for (let i = 0; i < 11; i++) {
+    state.fortCardRow.push({
+      id: `fc${i + 1}`,
+      scoringProvinceIds: [`p${(i % 16) + 1}`, `p${((i+1) % 16) + 1}`]
+    });
+  }
+  
   return state;
 }
 
@@ -56,6 +84,14 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
     player.playedCard = card;
     
     state.log.push(`Player ${player.name} played ${card.name}`);
+
+    // Let's add a fake piece placement so the board changes visually
+    const randomProvince = `p${Math.floor(Math.random() * 16) + 1}`;
+    state.provinces[randomProvince].pieces.push({
+      playerId: player.id,
+      type: 'villager'
+    });
+    state.log.push(`${player.name} placed a villager in Province ${randomProvince.substring(1)}`);
 
     // Immediately resolve Sentinel
     if (card.effectType === 'sentinel') {
