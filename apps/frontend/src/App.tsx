@@ -176,7 +176,7 @@ function App() {
            <div className="bg-white p-4 rounded shadow border flex-grow overflow-y-auto">
              <h3 className="font-bold border-b mb-2 pb-1">Log</h3>
              <ul className="text-sm text-gray-700">
-               {gameState.log.map((entry, idx) => (
+               {[...gameState.log].reverse().map((entry, idx) => (
                  <li key={idx} className="mb-1">{entry}</li>
                ))}
              </ul>

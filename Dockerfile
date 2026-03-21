@@ -7,8 +7,11 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY packages/shared/package*.json ./packages/shared/
+COPY packages/shared/tsconfig*.json ./packages/shared/
 COPY apps/backend/package*.json ./apps/backend/
+COPY apps/backend/tsconfig*.json ./apps/backend/
 COPY apps/frontend/package*.json ./apps/frontend/
+COPY apps/frontend/tsconfig*.json ./apps/frontend/
 
 RUN npm install
 
