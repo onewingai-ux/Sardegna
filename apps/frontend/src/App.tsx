@@ -4,22 +4,22 @@ import type { GameState, PlayerId, Color, PlayerAction } from '@sardegna/shared'
 
 
 const PROVINCE_COORDS = {
-  p1: { x: 260, y: 140 }, // Sassari (NW)
-  p2: { x: 360, y: 110 }, // Castelsardo (N)
-  p3: { x: 500, y: 120 }, // Olbia (NE)
-  p4: { x: 220, y: 250 }, // Alghero (W-NW)
-  p5: { x: 310, y: 280 }, // Bosa (W)
-  p6: { x: 410, y: 230 }, // Macomer (Central-N)
-  p7: { x: 520, y: 290 }, // Nuoro (Central-E)
-  p8: { x: 560, y: 380 }, // Dorgali (E)
-  p9: { x: 280, y: 410 }, // Oristano (W)
-  p10: { x: 430, y: 430 }, // Sorgono (Central)
-  p11: { x: 550, y: 490 }, // Lanusei (E)
-  p12: { x: 320, y: 550 }, // Iglesias (SW)
-  p13: { x: 420, y: 580 }, // Sanluri (Central-S)
-  p14: { x: 550, y: 620 }, // Muravera (SE)
-  p15: { x: 300, y: 680 }, // Carbonia (SW-tip)
-  p16: { x: 450, y: 700 }  // Cagliari (S)
+  p1: { x: 300, y: 120 }, // Sassari (NW)
+  p2: { x: 380, y: 80 }, // Castelsardo (N)
+  p3: { x: 530, y: 150 }, // Olbia (NE)
+  p4: { x: 230, y: 250 }, // Alghero (W-NW)
+  p5: { x: 330, y: 280 }, // Bosa (W)
+  p6: { x: 420, y: 240 }, // Macomer (Central-N)
+  p7: { x: 500, y: 320 }, // Nuoro (Central-E)
+  p8: { x: 560, y: 390 }, // Dorgali (E)
+  p9: { x: 270, y: 430 }, // Oristano (W)
+  p10: { x: 420, y: 420 }, // Sorgono (Central)
+  p11: { x: 540, y: 500 }, // Lanusei (E)
+  p12: { x: 280, y: 600 }, // Iglesias (SW)
+  p13: { x: 400, y: 580 }, // Sanluri (Central-S)
+  p14: { x: 560, y: 640 }, // Muravera (SE)
+  p15: { x: 280, y: 720 }, // Carbonia (SW-tip)
+  p16: { x: 440, y: 710 }, // Cagliari (S)
 };
 
 const socket: Socket = io(import.meta.env.VITE_SERVER_URL || window.location.origin);
@@ -174,7 +174,7 @@ function App() {
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none opacity-40">
             {/* We use a public domain or abstract map of Sardinia as a background */}
             <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Sardinia_provinces_%28blank%29.svg/800px-Sardinia_provinces_%28blank%29.svg.png" 
+              src="/map.png" 
               alt="Sardinia Map"
               className="object-contain h-[750px]"
             />
