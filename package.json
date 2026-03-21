@@ -1,0 +1,14 @@
+{
+  "name": "sardegna-multiplayer",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "start": "npm run start --workspace=apps/backend"
+  }
+}
