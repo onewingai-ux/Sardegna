@@ -9,6 +9,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "composite": true,
+    "paths": {
+      "@sardegna/shared": ["./packages/shared/src/index.ts"]
+    },
+      "@sardegna/shared": ["./packages/shared/src/index.ts"]
+    },
     "resolveJsonModule": true
   },
   "exclude": ["node_modules", "dist", "build"]
