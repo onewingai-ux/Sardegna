@@ -16,6 +16,7 @@ export interface Player {
     forts: number;
     ships: number;
   };
+  isBot?: boolean;
 }
 
 export type ResourceType = 'wheat' | 'wine_olive' | 'thyme_cheese';

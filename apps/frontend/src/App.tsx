@@ -51,6 +51,12 @@ function App() {
     socket.emit('startGame', { gameId: gameState.id, playerId });
   };
 
+  
+  const addBot = () => {
+    if (!gameState) return;
+    socket.emit('addBot', { gameId: gameState.id });
+  };
+
   const playCard = (cardId: string) => {
     if (!gameState) return;
     const action: PlayerAction = {
@@ -150,14 +156,24 @@ function App() {
             <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded shadow z-10 text-center">
               <h3 className="text-lg font-bold mb-2">Lobby</h3>
               <p className="mb-4">{gameState.players.length}/4 Players Joined</p>
-              {gameState.players.length >= 2 && (
-                <button 
-                  className="bg-green-500 text-white px-4 py-2 rounded"
-                  onClick={startGame}
-                >
-                  Start Game
-                </button>
-              )}
+              <div className="flex justify-center gap-2">
+                {gameState.players.length < 4 && (
+                  <button 
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                    onClick={addBot}
+                  >
+                    Add Bot
+                  </button>
+                )}
+                {gameState.players.length >= 2 && (
+                  <button 
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={startGame}
+                  >
+                    Start Game
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

@@ -2,7 +2,7 @@ import express from 'express';
 import http from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
-import { GameState, createNewGame, startGame, applyAction, PlayerAction } from '@sardegna/shared';
+import { GameState, createNewGame, startGame, applyAction, PlayerAction, Color } from '@sardegna/shared';
 import path from 'path';
 
 const app = express();
@@ -21,6 +21,47 @@ app.use(express.json());
 
 // In-memory store
 const games: Record<string, GameState> = {};
+
+// Helper: check if active player is bot and take action
+function handleBotTurn(gameId: string) {
+  const game = games[gameId];
+  if (!game || game.phase !== 'playing' || !game.activePlayerId) return;
+
+  const activePlayer = game.players.find((p: any) => p.id === game.activePlayerId);
+  if (!activePlayer || !activePlayer.isBot) return;
+
+  // It's a bot's turn! Wait a short delay to simulate "thinking", then play a card
+  setTimeout(() => {
+    // Re-fetch state in case it changed
+    const currentGameState = games[gameId];
+    if (!currentGameState || currentGameState.phase !== 'playing') return;
+    
+    const botPlayer = currentGameState.players.find((p: any) => p.id === currentGameState.activePlayerId);
+    if (!botPlayer || !botPlayer.isBot) return;
+    
+    // Choose a random available card
+    if (botPlayer.availableCards.length > 0) {
+      const randomCardIndex = Math.floor(Math.random() * botPlayer.availableCards.length);
+      const chosenCard = botPlayer.availableCards[randomCardIndex];
+      
+      const action: PlayerAction = {
+        type: 'PLAY_CARD',
+        playerId: botPlayer.id,
+        cardId: chosenCard.id
+      };
+      
+      try {
+        games[gameId] = applyAction(currentGameState, action);
+        io.to(gameId).emit('gameStateUpdate', games[gameId]);
+        
+        // After applying action, the turn might pass to another bot
+        handleBotTurn(gameId);
+      } catch (err) {
+        console.error("Bot action error:", err);
+      }
+    }
+  }, 1500); // 1.5s delay
+}
 
 // REST Endpoints
 app.post('/api/games', (req, res) => {
@@ -50,7 +91,7 @@ io.on('connection', (socket: Socket) => {
     socket.join(gameId);
 
     // If player doesn't exist, try to add them
-    let player = game.players.find(p => p.id === playerId);
+    let player = game.players.find((p: any) => p.id === playerId);
     if (!player) {
       if (game.phase !== 'lobby') {
         socket.emit('error', { message: 'Game already in progress' });
@@ -75,11 +116,51 @@ io.on('connection', (socket: Socket) => {
         score: 0,
         availableCards: starterHand,
         playedCard: null,
-        reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 }
+        reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 },
+        isBot: false
       });
       game.log.push(`${playerName} joined the game.`);
     }
 
+    io.to(gameId).emit('gameStateUpdate', game);
+  });
+  
+  // Add Bot Event
+  socket.on('addBot', ({ gameId }) => {
+    let game = games[gameId];
+    if (!game) return;
+    
+    if (game.phase !== 'lobby') {
+      socket.emit('error', { message: 'Game already in progress' });
+      return;
+    }
+    if (game.players.length >= 4) {
+      socket.emit('error', { message: 'Game is full' });
+      return;
+    }
+    
+    const botId = 'bot-' + Math.random().toString(36).substring(2, 6);
+    const availableColors: Color[] = ['red', 'blue', 'yellow', 'green'];
+    const usedColors = game.players.map((p: any) => p.color);
+    const botColor = availableColors.find(c => !usedColors.includes(c)) || 'red';
+    
+    const starterHand = [
+      { id: 'c1', name: 'Priest', effectDescription: 'Move priest', effectType: 'move_priest' },
+      { id: 'c2', name: 'Sentinel', effectDescription: 'Score Fort', effectType: 'sentinel' }
+    ];
+
+    game.players.push({
+      id: botId,
+      name: `Bot ${botId.substring(4)}`,
+      color: botColor,
+      score: 0,
+      availableCards: starterHand,
+      playedCard: null,
+      reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 },
+      isBot: true
+    });
+    
+    game.log.push(`Bot joined the game.`);
     io.to(gameId).emit('gameStateUpdate', game);
   });
 
@@ -92,6 +173,9 @@ io.on('connection', (socket: Socket) => {
       game = startGame(game);
       game.log.push('Game started!');
       io.to(gameId).emit('gameStateUpdate', game);
+      
+      // Kick off bot turn if a bot is first
+      handleBotTurn(gameId);
     } catch (err: any) {
       socket.emit('error', { message: err.message });
     }
@@ -104,6 +188,9 @@ io.on('connection', (socket: Socket) => {
     try {
       game = applyAction(game, action);
       io.to(gameId).emit('gameStateUpdate', game);
+      
+      // Kick off bot turn if the next player is a bot
+      handleBotTurn(gameId);
     } catch (err: any) {
       socket.emit('error', { message: err.message });
     }
