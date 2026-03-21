@@ -4,22 +4,22 @@ import type { GameState, PlayerId, Color, PlayerAction } from '@sardegna/shared'
 
 
 const PROVINCE_COORDS = {
-  p1: { x: 200, y: 100 },
-  p2: { x: 350, y: 120 },
-  p3: { x: 500, y: 150 },
-  p4: { x: 220, y: 220 },
-  p5: { x: 350, y: 240 },
-  p6: { x: 480, y: 270 },
-  p7: { x: 600, y: 300 },
-  p8: { x: 230, y: 340 },
-  p9: { x: 360, y: 360 },
-  p10: { x: 490, y: 390 },
-  p11: { x: 610, y: 420 },
-  p12: { x: 250, y: 460 },
-  p13: { x: 380, y: 480 },
-  p14: { x: 510, y: 510 },
-  p15: { x: 270, y: 580 },
-  p16: { x: 400, y: 600 }
+  p1: { x: 260, y: 140 }, // Sassari (NW)
+  p2: { x: 360, y: 110 }, // Castelsardo (N)
+  p3: { x: 500, y: 120 }, // Olbia (NE)
+  p4: { x: 220, y: 250 }, // Alghero (W-NW)
+  p5: { x: 310, y: 280 }, // Bosa (W)
+  p6: { x: 410, y: 230 }, // Macomer (Central-N)
+  p7: { x: 520, y: 290 }, // Nuoro (Central-E)
+  p8: { x: 560, y: 380 }, // Dorgali (E)
+  p9: { x: 280, y: 410 }, // Oristano (W)
+  p10: { x: 430, y: 430 }, // Sorgono (Central)
+  p11: { x: 550, y: 490 }, // Lanusei (E)
+  p12: { x: 320, y: 550 }, // Iglesias (SW)
+  p13: { x: 420, y: 580 }, // Sanluri (Central-S)
+  p14: { x: 550, y: 620 }, // Muravera (SE)
+  p15: { x: 300, y: 680 }, // Carbonia (SW-tip)
+  p16: { x: 450, y: 700 }  // Cagliari (S)
 };
 
 const socket: Socket = io(import.meta.env.VITE_SERVER_URL || window.location.origin);
@@ -171,6 +171,15 @@ function App() {
         <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto min-w-[800px] min-h-[800px]">
           <h2 className="text-2xl font-bold mb-4 absolute top-4 left-4 z-10">Board View (Island of Sardegna)</h2>
           
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none opacity-40">
+            {/* We use a public domain or abstract map of Sardinia as a background */}
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Sardinia_provinces_%28blank%29.svg/800px-Sardinia_provinces_%28blank%29.svg.png" 
+              alt="Sardinia Map"
+              className="object-contain h-[750px]"
+            />
+          </div>
+          
           <svg className="w-full h-full absolute top-0 left-0" viewBox="0 0 800 800">
             {/* Draw edges between adjacent provinces */}
             {Object.values(gameState.provinces).map((province) => {
@@ -184,7 +193,7 @@ function App() {
                     <line 
                       key={`${province.id}-${adjId}`}
                       x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} 
-                      stroke="#888" strokeWidth="4" strokeDasharray="5,5"
+                      stroke="#374151" strokeWidth="3" strokeDasharray="6,4" opacity="0.6"
                     />
                   );
                 }
@@ -207,7 +216,7 @@ function App() {
 
               return (
                 <g key={province.id} transform={`translate(${p.x}, ${p.y})`}>
-                  <circle r="45" fill={bgColors[province.resource]} stroke="#4b5563" strokeWidth="3" />
+                  <circle r="35" fill={bgColors[province.resource]} fillOpacity="0.85" stroke="#1f2937" strokeWidth="2" filter="drop-shadow(0px 4px 3px rgba(0,0,0,0.3))" />
                   <text y="-10" textAnchor="middle" fill={textColor} fontSize="12" fontWeight="bold">
                     {province.name}
                   </text>
