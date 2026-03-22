@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head><title>Fort Mapping Tool</title><style>body{text-align:center;font-family:sans-serif;}svg{max-width:800px;border:2px solid #ccc;cursor:crosshair;}pre{text-align:left;display:inline-block;background:#eee;padding:20px;min-width:300px;font-size:16px;}ul{text-align:left;}</style></head>
+<body>
+<h3>Fort Mapping Tool</h3>
+<p>In Sardegna, there are 19 fort locations (crossroads marked with numbers 1 through 19).</p>
+<p>For the rules engine to know which fort gives influence to which province, we need a map showing what provinces each fort touches.</p>
+
+<p>Click on a fort number on the map, then click the provinces that touch that fort. Click the fort again to finish it and move to the next fort. Do this for all 19 forts, starting from 1 to 19.</p>
+
+<div style="display:flex; justify-content:center; gap: 20px;">
+  <div>
+    <svg id="mapsvg" width="800" height="800" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+      <image href="./map.png" x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
+    </svg>
+  </div>
+  <div>
+    <h4 id="status">Current Mode: Click Fort #1</h4>
+    <ul id="current-list"></ul>
+    <pre id="output">const FORT_CONNECTIONS = {\n</pre>
+  </div>
+</div>
+<script>
+let currentFort = 1;
+let currentProvinces = [];
+let mode = 'fort'; // 'fort' or 'provinces'
+
+document.getElementById('mapsvg').addEventListener('click', (e) => {
+    if(currentFort > 19) return;
+    const svg = document.getElementById('mapsvg');
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    
+    const x = Math.round(svgP.x);
+    const y = Math.round(svgP.y);
+
+    if (mode === 'fort') {
+        // We clicked a fort
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', x);
+        circle.setAttribute('cy', y);
+        circle.setAttribute('r', '15');
+        circle.setAttribute('fill', 'none');
+        circle.setAttribute('stroke', 'blue');
+        circle.setAttribute('stroke-width', '4');
+        svg.appendChild(circle);
+        
+        mode = 'provinces';
+        document.getElementById('status').innerText = `Current Mode: Click provinces touching Fort #${currentFort}. When done, click the Fort again to save.`;
+        currentProvinces = [];
+        document.getElementById('current-list').innerHTML = '';
+
+    } else if (mode === 'provinces') {
+        // Ask the user to prompt for a P number since drawing paths is hard to guess
+        const pNum = prompt(`Enter the Province Number (1-16) that touches Fort #${currentFort}:\n(Or click Cancel/leave blank to finish adding provinces for Fort #${currentFort})`);
+        
+        if (pNum && !isNaN(pNum) && pNum >= 1 && pNum <= 16) {
+           currentProvinces.push(`'p${pNum}'`);
+           
+           const li = document.createElement('li');
+           li.innerText = `Added Province p${pNum}`;
+           document.getElementById('current-list').appendChild(li);
+        } else {
+           // Finished
+           document.getElementById('output').innerText += `  f${currentFort}: { x: 0, y: 0, adjacentProvinces: [${currentProvinces.join(', ')}] },\n`;
+           
+           currentFort++;
+           if(currentFort > 19) {
+               document.getElementById('output').innerText += '};\n';
+               document.getElementById('status').innerText = "All 19 Forts Mapped!";
+           } else {
+               mode = 'fort';
+               document.getElementById('status').innerText = `Current Mode: Click Fort #${currentFort}`;
+               document.getElementById('current-list').innerHTML = '';
+           }
+        }
+    }
+});
+</script>
+</body>
+</html>
