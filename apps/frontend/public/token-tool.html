@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head><title>Token Mapping Tool</title><style>body{text-align:center;font-family:sans-serif;}svg{max-width:800px;border:2px solid #ccc;cursor:crosshair;}pre{text-align:left;display:inline-block;background:#eee;padding:20px;min-width:300px;font-size:16px;}ul{text-align:left;}</style></head>
+<body>
+<h3>Agriculture Token Mapping Tool</h3>
+<p>Each province has an Agriculture Token that starts the game there. We need to know EXACTLY where you want it to appear on the map, and WHAT TYPE of token it is.</p>
+<p><b>Instructions:</b><br/>
+1. Click the map EXACTLY where you want the token to appear for the highlighted Red P-Dot.<br/>
+2. A popup will ask you what type of token belongs in that province (Wheat, Wine/Olive, Thyme/Cheese).<br/>
+3. Repeat for all 16 regions.</p>
+
+<div style="display:flex; justify-content:center; gap: 20px;">
+  <div>
+    <svg id="mapsvg" width="800" height="800" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+      <image href="./map.png" x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
+    </svg>
+  </div>
+  <div>
+    <h4 id="status">Current Mode: Click to place token for p1</h4>
+    <ul id="current-list"></ul>
+    <pre id="output">const TOKEN_DATA = {\n</pre>
+  </div>
+</div>
+<script>
+// Known Province Coordinates
+const PROVINCE_COORDS = {
+  p1: { x: 278, y: 148 },
+  p2: { x: 381, y: 149 },
+  p3: { x: 427, y: 89 },
+  p4: { x: 290, y: 235 },
+  p5: { x: 473, y: 164 },
+  p6: { x: 357, y: 313 },
+  p7: { x: 450, y: 267 },
+  p8: { x: 574, y: 224 },
+  p9: { x: 375, y: 389 },
+  p10: { x: 456, y: 375 },
+  p11: { x: 330, y: 528 },
+  p12: { x: 441, y: 477 },
+  p13: { x: 517, y: 462 },
+  p14: { x: 267, y: 588 },
+  p15: { x: 381, y: 606 },
+  p16: { x: 501, y: 603 },
+};
+
+const svg = document.getElementById('mapsvg');
+let currentProvince = 1;
+
+function renderDots() {
+    // Clear previous
+    document.querySelectorAll('.p-dot').forEach(e => e.remove());
+    
+    for (const [pId, coords] of Object.entries(PROVINCE_COORDS)) {
+        const isCurrent = pId === `p${currentProvince}`;
+        
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'p-dot');
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', coords.x);
+        circle.setAttribute('cy', coords.y);
+        circle.setAttribute('r', isCurrent ? '12' : '6');
+        circle.setAttribute('fill', isCurrent ? 'yellow' : 'rgba(255,0,0,0.5)');
+        circle.setAttribute('stroke', isCurrent ? 'red' : 'none');
+        circle.setAttribute('stroke-width', isCurrent ? '2' : '0');
+        g.appendChild(circle);
+
+        if (isCurrent) {
+            const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            textBg.setAttribute('x', coords.x + 13);
+            textBg.setAttribute('y', coords.y - 10);
+            textBg.setAttribute('width', '35');
+            textBg.setAttribute('height', '20');
+            textBg.setAttribute('fill', 'black');
+            
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', coords.x + 15);
+            text.setAttribute('y', coords.y + 5);
+            text.setAttribute('fill', 'white');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('font-size', '16px');
+            text.textContent = pId;
+            
+            g.appendChild(textBg);
+            g.appendChild(text);
+        }
+
+        svg.appendChild(g);
+    }
+}
+
+renderDots();
+
+svg.addEventListener('click', (e) => {
+    if(currentProvince > 16) return;
+
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    
+    const x = Math.round(svgP.x);
+    const y = Math.round(svgP.y);
+
+    setTimeout(() => {
+        let typeNum = prompt(`What is the resource for p${currentProvince}?\n1 = Wheat (Yellow)\n2 = Wine/Olive (Green)\n3 = Thyme/Cheese (Orange)`);
+        
+        let resourceType = 'wheat';
+        let color = '#fde047';
+        if (typeNum === '2') {
+            resourceType = 'wine_olive';
+            color = '#86efac';
+        } else if (typeNum === '3') {
+            resourceType = 'thyme_cheese';
+            color = '#fdba74';
+        } else if (typeNum !== '1') {
+            alert('Invalid choice, defaulting to Wheat.');
+        }
+
+        // Draw the token where they clicked
+        const token = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        token.setAttribute('cx', x);
+        token.setAttribute('cy', y);
+        token.setAttribute('r', '10');
+        token.setAttribute('fill', color);
+        token.setAttribute('stroke', 'black');
+        token.setAttribute('stroke-width', '2');
+        svg.appendChild(token);
+
+        const li = document.createElement('li');
+        li.innerText = `p${currentProvince} - ${resourceType}`;
+        document.getElementById('current-list').appendChild(li);
+
+        document.getElementById('output').innerText += `  p${currentProvince}: { token_x: ${x}, token_y: ${y}, resource: '${resourceType}' },\n`;
+        
+        currentProvince++;
+        if (currentProvince > 16) {
+           document.getElementById('output').innerText += '};\n';
+           document.getElementById('status').innerText = "All 16 Tokens mapped!";
+           document.querySelectorAll('.p-dot').forEach(e => e.remove());
+        } else {
+           document.getElementById('status').innerText = `Current Mode: Click to place token for p${currentProvince}`;
+           renderDots();
+        }
+    }, 100);
+});
+
+</script>
+</body>
+</html>
