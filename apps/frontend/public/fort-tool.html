@@ -6,13 +6,20 @@
 <p>In Sardegna, there are 26 fort locations (crossroads marked with numbers 1 through 26).</p>
 <p>For the rules engine to know which fort gives influence to which province, we need a map showing what provinces each fort touches.</p>
 
-<p>Click on a fort number on the map, then it will prompt you for the Province ID (1-16). Repeat this until all provinces touching the fort are added, then click cancel/blank to move to the next fort. Do this for all 26 forts, starting from 1 to 26.</p>
+<p><b>Instructions:</b><br/>
+1. Click on a numbered fort crossroad.<br/>
+2. Click directly on the Red P-Dots that touch that fort.<br/>
+3. Click the cyan "Done" button at the bottom right when you've selected all touching provinces.<br/>
+4. Repeat for all 26 forts.</p>
 
 <div style="display:flex; justify-content:center; gap: 20px;">
   <div>
     <svg id="mapsvg" width="800" height="800" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
       <image href="./map.png" x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
     </svg>
+    <div style="margin-top:10px;">
+       <button id="btn-done" style="padding:10px 20px; font-size:18px; cursor:pointer; background:cyan;" disabled>Done with Fort #1</button>
+    </div>
   </div>
   <div>
     <h4 id="status">Current Mode: Click Fort #1</h4>
@@ -21,7 +28,7 @@
   </div>
 </div>
 <script>
-// Known Province Coordinates from previous step
+// Known Province Coordinates
 const PROVINCE_COORDS = {
   p1: { x: 278, y: 148 },
   p2: { x: 381, y: 149 },
@@ -41,27 +48,34 @@ const PROVINCE_COORDS = {
   p16: { x: 501, y: 603 },
 };
 
-// Draw known provinces immediately on load
 const svg = document.getElementById('mapsvg');
+
+// Draw province interactable dots
 for (const [pId, coords] of Object.entries(PROVINCE_COORDS)) {
-    // Draw dot
+    // Group to make clicking easier
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'province-dot');
+    g.setAttribute('data-pid', pId);
+    g.style.cursor = 'pointer';
+
+    // Clickable hit area
+    const hit = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    hit.setAttribute('cx', coords.x);
+    hit.setAttribute('cy', coords.y);
+    hit.setAttribute('r', '20'); // larger hit area
+    hit.setAttribute('fill', 'transparent');
+    g.appendChild(hit);
+
+    // Visible dot
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', coords.x);
     circle.setAttribute('cy', coords.y);
     circle.setAttribute('r', '8');
-    circle.setAttribute('fill', 'rgba(255,0,0,0.5)');
-    svg.appendChild(circle);
+    circle.setAttribute('fill', 'rgba(255,0,0,0.8)');
+    circle.setAttribute('id', `dot-${pId}`);
+    g.appendChild(circle);
 
-    // Draw label
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', coords.x + 10);
-    text.setAttribute('y', coords.y + 5);
-    text.setAttribute('fill', 'white');
-    text.setAttribute('font-weight', 'bold');
-    text.setAttribute('font-size', '16px');
-    text.textContent = pId;
-    
-    // Add background for label
+    // Label
     const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     textBg.setAttribute('x', coords.x + 8);
     textBg.setAttribute('y', coords.y - 10);
@@ -69,95 +83,140 @@ for (const [pId, coords] of Object.entries(PROVINCE_COORDS)) {
     textBg.setAttribute('height', '20');
     textBg.setAttribute('fill', 'black');
     textBg.setAttribute('opacity', '0.7');
-    
-    svg.appendChild(textBg);
-    svg.appendChild(text);
+    textBg.style.pointerEvents = 'none';
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', coords.x + 10);
+    text.setAttribute('y', coords.y + 5);
+    text.setAttribute('fill', 'white');
+    text.setAttribute('font-weight', 'bold');
+    text.setAttribute('font-size', '16px');
+    text.textContent = pId;
+    text.style.pointerEvents = 'none';
+
+    g.appendChild(textBg);
+    g.appendChild(text);
+
+    // Click handler for province
+    g.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent triggering svg click
+        if (mode !== 'provinces') return;
+        
+        if (!currentProvinces.includes(pId)) {
+            currentProvinces.push(pId);
+            // highlight the dot visually
+            document.getElementById(`dot-${pId}`).setAttribute('fill', 'yellow');
+            circle.setAttribute('r', '12');
+
+            const li = document.createElement('li');
+            li.innerText = `Added Province ${pId}`;
+            li.id = `li-${pId}`;
+            document.getElementById('current-list').appendChild(li);
+        } else {
+            // Un-toggle
+            currentProvinces = currentProvinces.filter(p => p !== pId);
+            document.getElementById(`dot-${pId}`).setAttribute('fill', 'rgba(255,0,0,0.8)');
+            circle.setAttribute('r', '8');
+            document.getElementById(`li-${pId}`).remove();
+        }
+    });
+
+    svg.appendChild(g);
 }
 
 
 let currentFort = 1;
 let currentProvinces = [];
 let mode = 'fort'; // 'fort' or 'provinces'
-
 let currentX = 0;
 let currentY = 0;
 
-document.getElementById('mapsvg').addEventListener('click', (e) => {
+// Clicking map to set fort location
+svg.addEventListener('click', (e) => {
     if(currentFort > 26) return;
+    if(mode !== 'fort') return; // only click map when in fort mode
+
     const pt = svg.createSVGPoint();
     pt.x = e.clientX;
     pt.y = e.clientY;
     const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
     
-    if (mode === 'fort') {
-        currentX = Math.round(svgP.x);
-        currentY = Math.round(svgP.y);
-        
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', currentX);
-        circle.setAttribute('cy', currentY);
-        circle.setAttribute('r', '15');
-        circle.setAttribute('fill', 'none');
-        circle.setAttribute('stroke', 'cyan');
-        circle.setAttribute('stroke-width', '4');
-        svg.appendChild(circle);
-        
-        mode = 'provinces';
-        document.getElementById('status').innerText = `Current Mode: Adding provinces touching Fort #${currentFort}.`;
-        currentProvinces = [];
-        document.getElementById('current-list').innerHTML = '';
-        
-        askProvinces();
+    currentX = Math.round(svgP.x);
+    currentY = Math.round(svgP.y);
+    
+    // Draw tentative fort circle
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', currentX);
+    circle.setAttribute('cy', currentY);
+    circle.setAttribute('r', '15');
+    circle.setAttribute('fill', 'none');
+    circle.setAttribute('stroke', 'cyan');
+    circle.setAttribute('stroke-width', '4');
+    circle.setAttribute('id', 'temp-fort');
+    svg.appendChild(circle);
+    
+    mode = 'provinces';
+    document.getElementById('status').innerText = `Current Mode: Click Red P-Dots touching Fort #${currentFort}.`;
+    document.getElementById('btn-done').disabled = false;
+    document.getElementById('btn-done').innerText = `Done with Fort #${currentFort}`;
+    currentProvinces = [];
+    document.getElementById('current-list').innerHTML = '';
+});
 
+// Done button logic
+document.getElementById('btn-done').addEventListener('click', () => {
+    if (mode !== 'provinces') return;
+    
+    // Format output
+    const quotedProvinces = currentProvinces.map(p => `'${p}'`);
+    document.getElementById('output').innerText += `  f${currentFort}: { x: ${currentX}, y: ${currentY}, adjacentProvinces: [${quotedProvinces.join(', ')}] },\n`;
+
+    // Make fort permanent
+    document.getElementById('temp-fort').removeAttribute('id'); // lock it in
+
+    // Draw permanent fort label
+    const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    textBg.setAttribute('x', currentX - 12);
+    textBg.setAttribute('y', currentY - 35);
+    textBg.setAttribute('width', '35');
+    textBg.setAttribute('height', '20');
+    textBg.setAttribute('fill', 'black');
+    textBg.setAttribute('opacity', '0.7');
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', currentX - 10);
+    text.setAttribute('y', currentY - 20);
+    text.setAttribute('fill', 'cyan');
+    text.setAttribute('font-weight', 'bold');
+    text.setAttribute('font-size', '18px');
+    text.textContent = 'f' + currentFort;
+    
+    svg.appendChild(textBg);
+    svg.appendChild(text);
+
+    // Reset province dots
+    for (const pId of Object.keys(PROVINCE_COORDS)) {
+        const dot = document.getElementById(`dot-${pId}`);
+        dot.setAttribute('fill', 'rgba(255,0,0,0.8)');
+        dot.setAttribute('r', '8');
+    }
+
+    currentFort++;
+    if(currentFort > 26) {
+        document.getElementById('output').innerText += '};\n';
+        document.getElementById('status').innerText = "All 26 Forts Mapped!";
+        document.getElementById('btn-done').disabled = true;
+        document.getElementById('btn-done').innerText = "Finished";
+        mode = 'done';
+    } else {
+        mode = 'fort';
+        document.getElementById('status').innerText = `Current Mode: Click Fort #${currentFort}`;
+        document.getElementById('current-list').innerHTML = '';
+        document.getElementById('btn-done').disabled = true;
+        document.getElementById('btn-done').innerText = `Waiting for Fort #${currentFort}...`;
     }
 });
 
-function askProvinces() {
-    setTimeout(() => {
-        let pNum = prompt(`Enter a Province Number (1-16) that touches Fort #${currentFort}:\n(Or leave blank / click Cancel to save and move to Fort #${currentFort + 1})`);
-        
-        if (pNum && !isNaN(pNum) && pNum >= 1 && pNum <= 16) {
-           currentProvinces.push(`'p${pNum}'`);
-           const li = document.createElement('li');
-           li.innerText = `Added Province p${pNum}`;
-           document.getElementById('current-list').appendChild(li);
-           askProvinces(); // Ask for another
-        } else {
-           // Finished
-           document.getElementById('output').innerText += `  f${currentFort}: { x: ${currentX}, y: ${currentY}, adjacentProvinces: [${currentProvinces.join(', ')}] },\n`;
-           
-           // Label the fort
-           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-           text.setAttribute('x', currentX - 10);
-           text.setAttribute('y', currentY - 20);
-           text.setAttribute('fill', 'cyan');
-           text.setAttribute('font-weight', 'bold');
-           text.setAttribute('font-size', '18px');
-           text.textContent = 'f' + currentFort;
-           
-           const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-           textBg.setAttribute('x', currentX - 12);
-           textBg.setAttribute('y', currentY - 35);
-           textBg.setAttribute('width', '35');
-           textBg.setAttribute('height', '20');
-           textBg.setAttribute('fill', 'black');
-           textBg.setAttribute('opacity', '0.7');
-
-           document.getElementById('mapsvg').appendChild(textBg);
-           document.getElementById('mapsvg').appendChild(text);
-
-           currentFort++;
-           if(currentFort > 26) {
-               document.getElementById('output').innerText += '};\n';
-               document.getElementById('status').innerText = "All 26 Forts Mapped!";
-           } else {
-               mode = 'fort';
-               document.getElementById('status').innerText = `Current Mode: Click Fort #${currentFort}`;
-               document.getElementById('current-list').innerHTML = '';
-           }
-        }
-    }, 100);
-}
 </script>
 </body>
 </html>
