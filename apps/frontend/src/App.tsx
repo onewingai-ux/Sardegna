@@ -193,7 +193,7 @@ src={mapImage}
                 <g key={province.id} transform={`translate(${p.x}, ${p.y})`}>
                   {/* We only draw the pieces directly over the map coordinate */}
                   {/* Center the pieces grid relative to the coordinate */}
-                  <g transform="translate(-25, -15)">
+                  <g transform="translate(0, 0)">
                     {province.pieces.map((piece: any, idx: number) => {
                       const owner = gameState.players.find(pl => pl.id === piece.playerId);
                       const colorMap: Record<string, string> = {
@@ -205,8 +205,21 @@ src={mapImage}
                       const fill = colorMap[owner?.color || 'red'];
                       
                       // Wrap pieces into multiple rows if needed
-                      const x = (idx % 5) * 12;
-                      const y = Math.floor(idx / 5) * 12;
+                      // Calculate the grid of pieces
+                      const maxPerRow = 5;
+                      const total = province.pieces.length;
+                      const rows = Math.ceil(total / maxPerRow);
+                      
+                      // Center the entire block around (0,0)
+                      // If there is 1 piece, xOffset=0, yOffset=0
+                      const rowWidth = Math.min(total, maxPerRow) * 12;
+                      const blockHeight = rows * 12;
+                      
+                      const baseX = (idx % maxPerRow) * 12;
+                      const baseY = Math.floor(idx / maxPerRow) * 12;
+                      
+                      const x = baseX - (rowWidth / 2) + 6; // +6 is half the 12px cell size
+                      const y = baseY - (blockHeight / 2) + 6;
                       
                       return (
                         <circle key={idx} cx={x} cy={y} r="5" fill={fill} stroke="black" strokeWidth="1">
