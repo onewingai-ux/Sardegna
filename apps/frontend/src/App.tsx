@@ -175,11 +175,7 @@ function App() {
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none opacity-40">
             {/* We use a public domain or abstract map of Sardinia as a background */}
             <img 
-<<<<<<< HEAD
-              src="/map.png" 
-=======
-              src={mapImage} 
->>>>>>> feature/custom-map
+src={mapImage}
               alt="Sardinia Map"
               className="object-contain h-[750px]"
             />
