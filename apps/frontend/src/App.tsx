@@ -172,7 +172,7 @@ function App() {
         <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto min-w-[800px] min-h-[800px]">
           <h2 className="text-2xl font-bold mb-4 absolute top-4 left-4 z-10">Board View (Island of Sardegna)</h2>
           
-          <div className="absolute inset-0 flex justify-center items-center pointer-events-none opacity-40">
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
             {/* We use a public domain or abstract map of Sardinia as a background */}
             <img 
 src={mapImage}
@@ -182,51 +182,18 @@ src={mapImage}
           </div>
           
           <svg className="w-full h-full absolute top-0 left-0" viewBox="0 0 800 800">
-            {/* Draw edges between adjacent provinces */}
-            {Object.values(gameState.provinces).map((province) => {
-              return province.adjacentProvinces.map(adjId => {
-                // only draw one direction to avoid duplicate lines
-                if (province.id < adjId) {
-                  const p1 = PROVINCE_COORDS[province.id as keyof typeof PROVINCE_COORDS];
-                  const p2 = PROVINCE_COORDS[adjId as keyof typeof PROVINCE_COORDS];
-                  if (!p1 || !p2) return null;
-                  return (
-                    <line 
-                      key={`${province.id}-${adjId}`}
-                      x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} 
-                      stroke="#374151" strokeWidth="3" strokeDasharray="6,4" opacity="0.6"
-                    />
-                  );
-                }
-                return null;
-              });
-            })}
-
             {/* Draw nodes */}
             {Object.values(gameState.provinces).map((province) => {
               const p = PROVINCE_COORDS[province.id as keyof typeof PROVINCE_COORDS];
               if (!p) return null;
               
-              const bgColors = {
-                'wheat': '#fef08a', // yellow-200
-                'wine_olive': '#86efac', // green-300
-                'thyme_cheese': '#a16207' // yellow-700
-              };
               
-              const textColor = province.resource === 'thyme_cheese' ? 'white' : 'black';
 
               return (
                 <g key={province.id} transform={`translate(${p.x}, ${p.y})`}>
-                  <circle r="35" fill={bgColors[province.resource]} fillOpacity="0.85" stroke="#1f2937" strokeWidth="2" filter="drop-shadow(0px 4px 3px rgba(0,0,0,0.3))" />
-                  <text y="-10" textAnchor="middle" fill={textColor} fontSize="12" fontWeight="bold">
-                    {province.name}
-                  </text>
-                  <text y="5" textAnchor="middle" fill={textColor} fontSize="8" opacity="0.8">
-                    {province.resource.replace('_', ' ').toUpperCase()}
-                  </text>
-                  
-                  {/* Pieces */}
-                  <g transform="translate(-25, 15)">
+                  {/* We only draw the pieces directly over the map coordinate */}
+                  {/* Center the pieces grid relative to the coordinate */}
+                  <g transform="translate(-25, -15)">
                     {province.pieces.map((piece: any, idx: number) => {
                       const owner = gameState.players.find(pl => pl.id === piece.playerId);
                       const colorMap: Record<string, string> = {
