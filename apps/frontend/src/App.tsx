@@ -142,12 +142,12 @@ function App() {
     }
   };
 
-  const handleSentinelReveal = (numCards: number) => {
+  const handleSentinelReveal = (keep: boolean) => {
     if (!gameState) return;
     const action: PlayerAction = {
       type: 'SENTINEL_REVEAL',
       playerId,
-      payload: { numCards }
+      payload: { keep }
     };
     socket.emit('playerAction', { gameId: gameState.id, action });
   };
@@ -475,19 +475,20 @@ function App() {
       
         {gameState.phase === 'sentinel_reveal' && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-8 rounded shadow-lg max-w-sm text-center">
+            <div className="bg-white p-8 rounded shadow-lg max-w-md text-center">
               <h2 className="text-2xl font-bold mb-4">Sentinel Played!</h2>
-              <p className="mb-6">The leftmost fort card has been scored and discarded.</p>
+              <p className="mb-4">The leftmost fort card has been scored and discarded.</p>
+              <p className="mb-6">The next Fort Card in the row was revealed: <span className="font-bold text-lg text-blue-800">{gameState.fortCardRow[1]?.id}</span></p>
               {playerId === gameState.activePlayerId ? (
                 <>
-                  <p className="mb-4 font-bold">How many new fort cards would you like to reveal from the deck?</p>
-                  <div className="flex justify-center gap-4">
-                    <button onClick={() => handleSentinelReveal(1)} className="px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">Reveal 1 Card</button>
-                    <button onClick={() => handleSentinelReveal(2)} className="px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">Reveal 2 Cards</button>
+                  <p className="mb-4 font-bold">Would you like to keep this card, or discard it to the bottom of the deck and draw a new one?</p>
+                  <div className="flex justify-center gap-4 mt-6">
+                    <button onClick={() => handleSentinelReveal(true)} className="px-6 py-3 bg-green-500 text-white font-bold rounded hover:bg-green-600 shadow">Keep Card</button>
+                    <button onClick={() => handleSentinelReveal(false)} className="px-6 py-3 bg-red-500 text-white font-bold rounded hover:bg-red-600 shadow">Discard & Replace</button>
                   </div>
                 </>
               ) : (
-                <p className="font-bold text-gray-600">Waiting for active player to choose how many fort cards to reveal...</p>
+                <p className="font-bold text-gray-600 mt-6">Waiting for active player to decide whether to keep or replace the revealed card...</p>
               )}
             </div>
           </div>

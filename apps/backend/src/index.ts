@@ -46,7 +46,7 @@ function handleBotTurn(gameId: string) {
        const action: PlayerAction = {
          type: 'SENTINEL_REVEAL',
          playerId: botPlayer.id,
-         payload: { numCards: Math.random() > 0.5 ? 1 : 2 }
+         payload: { keep: Math.random() > 0.5 }
        };
        try {
          games[gameId] = applyAction(currentGameState, action);

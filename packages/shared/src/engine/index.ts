@@ -299,16 +299,29 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
   } else if (action.type === 'SENTINEL_REVEAL') {
     if (state.phase !== 'sentinel_reveal') throw new Error("Not in sentinel reveal phase");
     
-    const numCards = action.payload?.numCards || 1;
-    if (numCards < 1 || numCards > 2) throw new Error("Invalid number of fort cards to reveal");
-
-    // Reveal numCards from deck to the row
-    for (let i = 0; i < numCards; i++) {
-        const nextCard = state.fortCardDeck.shift();
-        if (nextCard) {
-            state.fortCardRow.push(nextCard);
-            state.log.push(`Revealed new Fort Card: ${nextCard.id}`);
+    const keep = action.payload?.keep;
+    const player = state.players.find(p => p.id === action.playerId);
+    
+    if (!keep) {
+        // Discard the newly revealed card (which is at index 1) to bottom of deck, draw a new one
+        const rejectedCard = state.fortCardRow.splice(1, 1)[0];
+        if (rejectedCard) {
+           state.fortCardDeck.push(rejectedCard);
+           const newCard = state.fortCardDeck.shift();
+           if (newCard) {
+               // insert new card at index 1
+               state.fortCardRow.splice(1, 0, newCard);
+               state.log.push(`${player?.name} rejected the card and revealed ${newCard.id}`);
+           }
         }
+    } else {
+        state.log.push(`${player?.name} decided to keep the revealed card.`);
+    }
+    
+    // Add a new face down card to the right side of the row so we always have 11
+    const nextDeckCard = state.fortCardDeck.shift();
+    if (nextDeckCard) {
+        state.fortCardRow.push(nextDeckCard);
     }
     
     state.phase = 'playing';
@@ -357,13 +370,12 @@ function triggerSentinel(state: GameState): GameState {
     }
   });
 
-  // Discard leftmost, reveal next
+  // Discard leftmost, move it to bottom of deck
   const discarded = state.fortCardRow.shift();
   if (discarded) state.fortCardDeck.push(discarded);
   
-  state.phase = 'playing';
-  state.isScoringInProgress = false;
-  nextTurn(state);
+  // Transition to reveal phase so active player can keep or reject the new leftmost card
+  state.phase = 'sentinel_reveal';
   
   return state;
 }
