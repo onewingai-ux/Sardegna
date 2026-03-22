@@ -16,6 +16,11 @@ export interface Player {
     forts: number;
     ships: number;
   };
+  tokens: {
+    wheat: number;
+    wine_olive: number;
+    thyme_cheese: number;
+  };
   isBot?: boolean;
 }
 
@@ -33,6 +38,7 @@ export interface Province {
   adjacentProvinces: string[]; // IDs of adjacent provinces
   adjacentHarbors: string[]; // IDs of adjacent harbors
   adjacentFortSpaces: string[]; // IDs of fort spaces bordering this province
+  hasAgricultureToken: boolean;
 }
 
 export interface Harbor {

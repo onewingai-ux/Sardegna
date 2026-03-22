@@ -134,6 +134,7 @@ io.on('connection', (socket: Socket) => {
         availableCards: starterHand,
         playedCard: null,
         reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 },
+        tokens: { wheat: 0, wine_olive: 0, thyme_cheese: 0 },
         isBot: false
       });
       game.log.push(`${playerName} joined the game.`);
@@ -179,6 +180,7 @@ io.on('connection', (socket: Socket) => {
       availableCards: starterHand,
       playedCard: null,
       reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 },
+      tokens: { wheat: 0, wine_olive: 0, thyme_cheese: 0 },
       isBot: true
     });
     

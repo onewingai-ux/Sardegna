@@ -71,7 +71,8 @@ export function createNewGame(id: string): GameState {
       pieces: [],
       adjacentProvinces: t.adj,
       adjacentHarbors: [],
-      adjacentFortSpaces: []
+      adjacentFortSpaces: [],
+      hasAgricultureToken: true
     };
   });
 
@@ -185,6 +186,21 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
       const { targetId, targetType } = action.payload;
       
       if (targetType === 'province' && state.provinces[targetId]) {
+         
+         // Handle Farmer card: Take agriculture token
+         if (card.effectType === 'take_token') {
+             if (!state.provinces[targetId].hasAgricultureToken) {
+                 throw new Error(`Province ${state.provinces[targetId].name} no longer has an agriculture token`);
+             }
+             // Take it
+             state.provinces[targetId].hasAgricultureToken = false;
+             const resourceType = state.provinces[targetId].resource;
+             player.tokens[resourceType]++;
+             state.log.push(`${player.name} took a ${resourceType} token from ${state.provinces[targetId].name}`);
+             nextTurn(state);
+             return state;
+         }
+
          const typeMap: Record<string, 'villager' | 'village' | 'priest'> = {
            'place_villager': 'villager',
            'place_village': 'village',
