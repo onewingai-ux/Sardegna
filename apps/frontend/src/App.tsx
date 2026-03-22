@@ -24,6 +24,15 @@ const PROVINCE_COORDS = {
 };
 
 
+
+const HARBOR_COORDS = {
+  h1: { x: 277, y: 106 },
+  h2: { x: 621, y: 111 },
+  h3: { x: 205, y: 255 },
+  h4: { x: 621, y: 371 },
+  h5: { x: 206, y: 441 },
+};
+
 const FORT_COORDS = {
   f1: { x: 317, y: 113 },
   f2: { x: 380, y: 95 },
@@ -133,7 +142,7 @@ function App() {
     }
   };
 
-  const handleMapClick = (targetId: string, type: 'province' | 'fortSpace') => {
+  const handleMapClick = (targetId: string, type: 'province' | 'fortSpace' | 'harbor') => {
     if (!gameState || !selectedCardId) return;
 
     // We have a pending card to play, and the user just clicked a map target
@@ -235,7 +244,29 @@ function App() {
           {/* We now lock the SVG to the same aspect ratio container. The map image is rendered INSIDE the SVG to guarantee the coordinate system perfectly matches the pixels of the calibration. */}
           <svg className="w-full h-full max-h-[800px] mx-auto absolute top-0 left-0 right-0" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
             <image href={mapImage} x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
-                        {/* Draw forts */}
+                                    {/* Draw harbors */}
+            {Object.values(gameState.harbors || {}).map((harbor) => {
+              const p = HARBOR_COORDS[harbor.id as keyof typeof HARBOR_COORDS];
+              if (!p) return null;
+              
+              return (
+                <g key={harbor.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(harbor.id, 'harbor')} style={{cursor: selectedCardId ? 'crosshair' : 'default'}}>
+                  <circle cx="0" cy="0" r="20" fill="transparent" />
+                  
+                  {/* Any placed ships */}
+                  {harbor.ships?.map((piece: any, idx: number) => {
+                    const owner = gameState.players.find(pl => pl.id === piece.playerId);
+                    const colorMap: Record<string, string> = { red: '#ef4444', blue: '#3b82f6', yellow: '#facc15', green: '#22c55e' };
+                    const fill = colorMap[owner?.color || 'red'];
+                    return (
+                      <ellipse key={idx} cx={-8 + (idx * 16)} cy="0" rx="8" ry="4" fill={fill} stroke="white" strokeWidth="1" />
+                    );
+                  })}
+                </g>
+              );
+            })}
+
+            {/* Draw forts */}
             {Object.values(gameState.fortSpaces || {}).map((fortSpace) => {
               const p = FORT_COORDS[fortSpace.id as keyof typeof FORT_COORDS];
               if (!p) return null;

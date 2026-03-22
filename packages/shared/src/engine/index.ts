@@ -1,4 +1,4 @@
-import { GameState, Player, PlayerId, CharacterCard, Province, GamePhase, FortCard, FortSpace } from '../types';
+import { GameState, Player, PlayerId, CharacterCard, Province, GamePhase, FortCard, FortSpace, Harbor } from '../types';
 
 // The island of Sardegna is roughly rectangular with a north/south split.
 // We assign exact topology matching the 16 regions.
@@ -50,6 +50,14 @@ const FORT_CONNECTIONS: Record<string, string[]> = {
   f26: ['p14', 'p15'],
 };
 
+const HARBOR_CONNECTIONS: Record<string, string[]> = {
+  h1: ['p1'],
+  h2: ['p5'],
+  h3: ['p4'],
+  h4: ['p10'],
+  h5: ['p9'],
+};
+
 
 export function createNewGame(id: string): GameState {
   
@@ -66,6 +74,20 @@ export function createNewGame(id: string): GameState {
       adjacentFortSpaces: []
     };
   });
+
+  const harbors: Record<string, Harbor> = {};
+  for (const [hId, pIds] of Object.entries(HARBOR_CONNECTIONS)) {
+    harbors[hId] = {
+      id: hId,
+      ships: [],
+      adjacentProvinces: pIds
+    };
+    pIds.forEach(pId => {
+      if(provinces[pId]) {
+        provinces[pId].adjacentHarbors.push(hId);
+      }
+    });
+  }
 
   const fortSpaces: Record<string, FortSpace> = {};
   for (const [fId, pIds] of Object.entries(FORT_CONNECTIONS)) {
@@ -89,7 +111,7 @@ export function createNewGame(id: string): GameState {
     activePlayerId: null,
     playerOrder: [],
     provinces,
-    harbors: {},
+    harbors,
     fortSpaces,
     fortCardDeck: [], // Shuffled 26
     fortCardRow: [], // Dealt 11
@@ -197,6 +219,24 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
            playerId: player.id
          });
          state.log.push(`${player.name} placed a fort at ${targetId}`);
+      } else if (targetType === 'harbor' && state.harbors[targetId] && card.effectType === 'place_ship') {
+         const harbor = state.harbors[targetId];
+         // Max 2 ships per harbor (or 1 in a 2-player game - for MVP we assume up to 4 players)
+         const maxShips = state.players.length === 2 ? 1 : 2;
+         if (harbor.ships.length >= maxShips) {
+             throw new Error(`Harbor ${targetId} is already full`);
+         }
+         if (harbor.ships.some(s => s.playerId === player.id)) {
+             throw new Error(`You already have a ship in harbor ${targetId}`);
+         }
+         if (player.reserves.ships <= 0) {
+             throw new Error(`No ships left in your personal reserve`);
+         }
+         player.reserves.ships--;
+         harbor.ships.push({
+             playerId: player.id
+         });
+         state.log.push(`${player.name} placed a ship at ${targetId}`);
       }
     } else {
        // Fallback for bot or error
@@ -259,14 +299,96 @@ function triggerSentinel(state: GameState): GameState {
 }
 
 function scoreFortCard(state: GameState, fortCard: FortCard) {
-  // Skeleton for scoring a fort card's provinces
-  // 1. Iterate over fortCard.scoringProvinceIds
-  // 2. For each province, tally influence:
-  //    - villager: 1
-  //    - village: 2
-  //    - priest: 3
-  //    - forts adjacent: 2
-  //    - ships adjacent harbor: 1
-  // 3. Assign VP (e.g., 4 VP first place, 2 VP second place, etc)
-  // 4. Update player scores
+  state.log.push(`--- Scoring Fort Card ${fortCard.id} ---`);
+
+  // Each fort card scores its adjacent provinces
+  for (const provId of fortCard.scoringProvinceIds) {
+    const province = state.provinces[provId];
+    if (!province) continue;
+
+    // Tally influence per player
+    const influence: Record<string, number> = {};
+    state.players.forEach(p => influence[p.id] = 0);
+
+    // 1. Pieces in province
+    for (const piece of province.pieces) {
+      if (piece.type === 'villager') influence[piece.playerId] += 1;
+      if (piece.type === 'village') influence[piece.playerId] += 2;
+      if (piece.type === 'priest') influence[piece.playerId] += 3;
+    }
+
+    // 2. Adjacent Forts
+    for (const fId of province.adjacentFortSpaces) {
+      const fortSpace = state.fortSpaces[fId];
+      if (fortSpace && fortSpace.forts.length > 0) {
+        influence[fortSpace.forts[0].playerId] += 2;
+      }
+    }
+
+    // 3. Adjacent Harbors
+    for (const hId of province.adjacentHarbors) {
+      const harbor = state.harbors[hId];
+      if (harbor) {
+        for (const ship of harbor.ships) {
+          influence[ship.playerId] += 1;
+        }
+      }
+    }
+
+    // Evaluate standings
+    const playersWithInfluence = state.players.filter(p => influence[p.id] > 0);
+    
+    if (playersWithInfluence.length === 0) {
+      state.log.push(`Province ${province.name}: No influence.`);
+      continue;
+    }
+
+    // Sort descending by influence
+    const sorted = [...playersWithInfluence].sort((a, b) => influence[b.id] - influence[a.id]);
+    
+    const highestInfluence = influence[sorted[0].id];
+    const tiedForFirst = sorted.filter(p => influence[p.id] === highestInfluence);
+    
+    // Scoring rules:
+    // If only 1 player has influence, they get 1st place VP (4 VP)
+    // If multiple tied for 1st, they all get 2 VP, and no 2nd place is awarded.
+    // If 1 clear 1st place, they get 4 VP. Then look at 2nd place.
+    // If multiple tied for 2nd, they get 0 VP. 1 clear 2nd gets 2 VP.
+    // In 2 player game, 2nd place only gets VP if they have at least half the influence of 1st place.
+
+    if (tiedForFirst.length > 1) {
+      // Tie for 1st
+      tiedForFirst.forEach(p => {
+        p.score += 2;
+        state.log.push(`Province ${province.name}: ${p.name} tied for 1st (${highestInfluence} inf) -> +2 VP`);
+      });
+    } else {
+      // Clear 1st
+      const first = tiedForFirst[0];
+      first.score += 4;
+      state.log.push(`Province ${province.name}: ${first.name} is 1st (${highestInfluence} inf) -> +4 VP`);
+      
+      // Look for 2nd
+      if (sorted.length > 1) {
+        const secondInfluence = influence[sorted[1].id];
+        const tiedForSecond = sorted.filter(p => influence[p.id] === secondInfluence);
+        
+        if (tiedForSecond.length === 1) {
+           const second = tiedForSecond[0];
+           let getsVP = true;
+           // 2-player exception
+           if (state.players.length === 2 && secondInfluence < Math.ceil(highestInfluence / 2)) {
+               getsVP = false;
+               state.log.push(`Province ${province.name}: ${second.name} is 2nd but lacks half of 1st's influence -> +0 VP`);
+           }
+           if (getsVP) {
+               second.score += 2;
+               state.log.push(`Province ${province.name}: ${second.name} is 2nd (${secondInfluence} inf) -> +2 VP`);
+           }
+        } else {
+           state.log.push(`Province ${province.name}: Multiple tied for 2nd -> +0 VP`);
+        }
+      }
+    }
+  }
 }
