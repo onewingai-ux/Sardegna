@@ -72,7 +72,9 @@ export function createNewGame(id: string): GameState {
       adjacentProvinces: t.adj,
       adjacentHarbors: [],
       adjacentFortSpaces: [],
-      hasAgricultureToken: true
+      hasAgricultureToken: true,
+      vp1: t.vp1,
+      vp2: t.vp2
     };
   });
 
@@ -375,14 +377,14 @@ function scoreFortCard(state: GameState, fortCard: FortCard) {
     if (tiedForFirst.length > 1) {
       // Tie for 1st
       tiedForFirst.forEach(p => {
-        p.score += 2;
-        state.log.push(`Province ${province.name}: ${p.name} tied for 1st (${highestInfluence} inf) -> +2 VP`);
+        p.score += province.vp2;
+        state.log.push(`Province ${province.name}: ${p.name} tied for 1st (${highestInfluence} inf) -> +${province.vp2} VP`);
       });
     } else {
       // Clear 1st
       const first = tiedForFirst[0];
-      first.score += 4;
-      state.log.push(`Province ${province.name}: ${first.name} is 1st (${highestInfluence} inf) -> +4 VP`);
+      first.score += province.vp1;
+      state.log.push(`Province ${province.name}: ${first.name} is 1st (${highestInfluence} inf) -> +${province.vp1} VP`);
       
       // Look for 2nd
       if (sorted.length > 1) {
@@ -398,8 +400,8 @@ function scoreFortCard(state: GameState, fortCard: FortCard) {
                state.log.push(`Province ${province.name}: ${second.name} is 2nd but lacks half of 1st's influence -> +0 VP`);
            }
            if (getsVP) {
-               second.score += 2;
-               state.log.push(`Province ${province.name}: ${second.name} is 2nd (${secondInfluence} inf) -> +2 VP`);
+               second.score += province.vp2;
+               state.log.push(`Province ${province.name}: ${second.name} is 2nd (${secondInfluence} inf) -> +${province.vp2} VP`);
            }
         } else {
            state.log.push(`Province ${province.name}: Multiple tied for 2nd -> +0 VP`);

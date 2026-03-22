@@ -301,6 +301,14 @@ function App() {
                   {/* We only draw the pieces directly over the map coordinate */}
                   {/* Center the pieces grid relative to the coordinate */}
                   <circle cx="0" cy="0" r="25" fill="transparent" />
+                  
+                  {/* Provide a fallback in case state.hasAgricultureToken isn't present in old games */}
+                  {(province.hasAgricultureToken || province.hasAgricultureToken === undefined) && (
+                    <g transform="translate(0, -20)">
+                      <circle cx="0" cy="0" r="8" fill={province.resource === 'wheat' ? '#fde047' : province.resource === 'wine_olive' ? '#86efac' : '#fdba74'} stroke="black" strokeWidth="1" />
+                    </g>
+                  )}
+                  
                   <g transform="translate(0, 0)">
                     {province.pieces.map((piece: any, idx: number) => {
                       const owner = gameState.players.find(pl => pl.id === piece.playerId);

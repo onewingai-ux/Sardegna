@@ -39,6 +39,8 @@ export interface Province {
   adjacentHarbors: string[]; // IDs of adjacent harbors
   adjacentFortSpaces: string[]; // IDs of fort spaces bordering this province
   hasAgricultureToken: boolean;
+  vp1: number;
+  vp2: number;
 }
 
 export interface Harbor {
