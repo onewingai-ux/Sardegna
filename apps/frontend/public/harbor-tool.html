@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head><title>Harbor Mapping Tool</title><style>body{text-align:center;font-family:sans-serif;}svg{max-width:800px;border:2px solid #ccc;cursor:crosshair;}pre{text-align:left;display:inline-block;background:#eee;padding:20px;min-width:300px;font-size:16px;}ul{text-align:left;}</style></head>
+<body>
+<h3>Harbor Mapping Tool</h3>
+<p>The rules mention harbors on the edge of the board where ships can be placed.</p>
+<p><b>Instructions:</b><br/>
+1. Click the map to place Harbor 1.<br/>
+2. Click directly on the Red P-Dots that touch that harbor (so the engine knows which province gets the ship's influence).<br/>
+3. Click the cyan "Done" button at the bottom right.<br/>
+4. Repeat for all harbors.</p>
+
+<div style="display:flex; justify-content:center; gap: 20px;">
+  <div>
+    <svg id="mapsvg" width="800" height="800" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+      <image href="./map.png" x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
+    </svg>
+    <div style="margin-top:10px;">
+       <button id="btn-done" style="padding:10px 20px; font-size:18px; cursor:pointer; background:cyan;" disabled>Done with Harbor #1</button>
+       <button id="btn-finish" style="padding:10px 20px; font-size:18px; cursor:pointer; background:orange;">Finish All Harbors</button>
+    </div>
+  </div>
+  <div>
+    <h4 id="status">Current Mode: Click Harbor #1</h4>
+    <ul id="current-list"></ul>
+    <pre id="output">const HARBOR_CONNECTIONS = {\n</pre>
+  </div>
+</div>
+<script>
+// Known Province Coordinates
+const PROVINCE_COORDS = {
+  p1: { x: 278, y: 148 },
+  p2: { x: 381, y: 149 },
+  p3: { x: 427, y: 89 },
+  p4: { x: 290, y: 235 },
+  p5: { x: 473, y: 164 },
+  p6: { x: 357, y: 313 },
+  p7: { x: 450, y: 267 },
+  p8: { x: 574, y: 224 },
+  p9: { x: 375, y: 389 },
+  p10: { x: 456, y: 375 },
+  p11: { x: 330, y: 528 },
+  p12: { x: 441, y: 477 },
+  p13: { x: 517, y: 462 },
+  p14: { x: 267, y: 588 },
+  p15: { x: 381, y: 606 },
+  p16: { x: 501, y: 603 },
+};
+
+const svg = document.getElementById('mapsvg');
+
+// Draw province interactable dots
+for (const [pId, coords] of Object.entries(PROVINCE_COORDS)) {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'province-dot');
+    g.setAttribute('data-pid', pId);
+    g.style.cursor = 'pointer';
+
+    const hit = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    hit.setAttribute('cx', coords.x);
+    hit.setAttribute('cy', coords.y);
+    hit.setAttribute('r', '20'); 
+    hit.setAttribute('fill', 'transparent');
+    g.appendChild(hit);
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', coords.x);
+    circle.setAttribute('cy', coords.y);
+    circle.setAttribute('r', '8');
+    circle.setAttribute('fill', 'rgba(255,0,0,0.8)');
+    circle.setAttribute('id', `dot-${pId}`);
+    g.appendChild(circle);
+
+    const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    textBg.setAttribute('x', coords.x + 8);
+    textBg.setAttribute('y', coords.y - 10);
+    textBg.setAttribute('width', '35');
+    textBg.setAttribute('height', '20');
+    textBg.setAttribute('fill', 'black');
+    textBg.setAttribute('opacity', '0.7');
+    textBg.style.pointerEvents = 'none';
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', coords.x + 10);
+    text.setAttribute('y', coords.y + 5);
+    text.setAttribute('fill', 'white');
+    text.setAttribute('font-weight', 'bold');
+    text.setAttribute('font-size', '16px');
+    text.textContent = pId;
+    text.style.pointerEvents = 'none';
+
+    g.appendChild(textBg);
+    g.appendChild(text);
+
+    g.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        if (mode !== 'provinces') return;
+        
+        if (!currentProvinces.includes(pId)) {
+            currentProvinces.push(pId);
+            document.getElementById(`dot-${pId}`).setAttribute('fill', 'yellow');
+            circle.setAttribute('r', '12');
+
+            const li = document.createElement('li');
+            li.innerText = `Added Province ${pId}`;
+            li.id = `li-${pId}`;
+            document.getElementById('current-list').appendChild(li);
+        } else {
+            currentProvinces = currentProvinces.filter(p => p !== pId);
+            document.getElementById(`dot-${pId}`).setAttribute('fill', 'rgba(255,0,0,0.8)');
+            circle.setAttribute('r', '8');
+            document.getElementById(`li-${pId}`).remove();
+        }
+    });
+
+    svg.appendChild(g);
+}
+
+
+let currentHarbor = 1;
+let currentProvinces = [];
+let mode = 'harbor'; // 'harbor' or 'provinces'
+let currentX = 0;
+let currentY = 0;
+
+svg.addEventListener('click', (e) => {
+    if(mode !== 'harbor') return;
+
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    
+    currentX = Math.round(svgP.x);
+    currentY = Math.round(svgP.y);
+    
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', currentX);
+    circle.setAttribute('cy', currentY);
+    circle.setAttribute('r', '20');
+    circle.setAttribute('fill', 'none');
+    circle.setAttribute('stroke', 'blue');
+    circle.setAttribute('stroke-dasharray', '5,5');
+    circle.setAttribute('stroke-width', '4');
+    circle.setAttribute('id', 'temp-harbor');
+    svg.appendChild(circle);
+    
+    mode = 'provinces';
+    document.getElementById('status').innerText = `Current Mode: Click Red P-Dots touching Harbor #${currentHarbor}.`;
+    document.getElementById('btn-done').disabled = false;
+    document.getElementById('btn-done').innerText = `Done with Harbor #${currentHarbor}`;
+    currentProvinces = [];
+    document.getElementById('current-list').innerHTML = '';
+});
+
+document.getElementById('btn-done').addEventListener('click', () => {
+    if (mode !== 'provinces') return;
+    
+    const quotedProvinces = currentProvinces.map(p => `'${p}'`);
+    document.getElementById('output').innerText += `  h${currentHarbor}: { x: ${currentX}, y: ${currentY}, adjacentProvinces: [${quotedProvinces.join(', ')}] },\n`;
+
+    document.getElementById('temp-harbor').removeAttribute('id');
+
+    const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    textBg.setAttribute('x', currentX - 12);
+    textBg.setAttribute('y', currentY - 35);
+    textBg.setAttribute('width', '35');
+    textBg.setAttribute('height', '20');
+    textBg.setAttribute('fill', 'blue');
+    textBg.setAttribute('opacity', '0.7');
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', currentX - 10);
+    text.setAttribute('y', currentY - 20);
+    text.setAttribute('fill', 'white');
+    text.setAttribute('font-weight', 'bold');
+    text.setAttribute('font-size', '18px');
+    text.textContent = 'h' + currentHarbor;
+    
+    svg.appendChild(textBg);
+    svg.appendChild(text);
+
+    for (const pId of Object.keys(PROVINCE_COORDS)) {
+        const dot = document.getElementById(`dot-${pId}`);
+        dot.setAttribute('fill', 'rgba(255,0,0,0.8)');
+        dot.setAttribute('r', '8');
+    }
+
+    currentHarbor++;
+    mode = 'harbor';
+    document.getElementById('status').innerText = `Current Mode: Click Harbor #${currentHarbor}`;
+    document.getElementById('current-list').innerHTML = '';
+    document.getElementById('btn-done').disabled = true;
+    document.getElementById('btn-done').innerText = `Waiting for Harbor #${currentHarbor}...`;
+});
+
+document.getElementById('btn-finish').addEventListener('click', () => {
+    document.getElementById('output').innerText += '};\n';
+    document.getElementById('status').innerText = "Finished Mapping Harbors!";
+    document.getElementById('btn-finish').disabled = true;
+    mode = 'done';
+});
+
+</script>
+</body>
+</html>
