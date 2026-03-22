@@ -104,9 +104,13 @@ io.on('connection', (socket: Socket) => {
       
       // Starter hand skeleton
       const starterHand = [
-        { id: 'c1', name: 'Priest', effectDescription: 'Move priest', effectType: 'move_priest' },
-        { id: 'c2', name: 'Sentinel', effectDescription: 'Score Fort', effectType: 'sentinel' }
-        // ... 5 more cards
+        { id: 'c1', name: 'Priest', effectDescription: 'Place 1 Priest or Move 1 Priest up to 3 spaces', effectType: 'move_priest' },
+        { id: 'c2', name: 'Sentinel', effectDescription: 'Score leftmost face-up Fort Card', effectType: 'sentinel' },
+        { id: 'c3', name: 'Villager', effectDescription: 'Place 1 Villager', effectType: 'place_villager' },
+        { id: 'c4', name: 'Village', effectDescription: 'Place 1 Village', effectType: 'place_village' },
+        { id: 'c5', name: 'Ship', effectDescription: 'Place 1 Ship in a Harbor', effectType: 'place_ship' },
+        { id: 'c6', name: 'Fort', effectDescription: 'Place 1 Fort on a Fort Space', effectType: 'place_fort' },
+        { id: 'c7', name: 'Farmer', effectDescription: 'Take 1 Agriculture Token', effectType: 'take_token' }
       ];
 
       game.players.push({
@@ -145,9 +149,14 @@ io.on('connection', (socket: Socket) => {
     const botColor = availableColors.find(c => !usedColors.includes(c)) || 'red';
     
     const starterHand = [
-      { id: 'c1', name: 'Priest', effectDescription: 'Move priest', effectType: 'move_priest' },
-      { id: 'c2', name: 'Sentinel', effectDescription: 'Score Fort', effectType: 'sentinel' }
-    ];
+        { id: 'c1', name: 'Priest', effectDescription: 'Place 1 Priest or Move 1 Priest up to 3 spaces', effectType: 'move_priest' },
+        { id: 'c2', name: 'Sentinel', effectDescription: 'Score leftmost face-up Fort Card', effectType: 'sentinel' },
+        { id: 'c3', name: 'Villager', effectDescription: 'Place 1 Villager', effectType: 'place_villager' },
+        { id: 'c4', name: 'Village', effectDescription: 'Place 1 Village', effectType: 'place_village' },
+        { id: 'c5', name: 'Ship', effectDescription: 'Place 1 Ship in a Harbor', effectType: 'place_ship' },
+        { id: 'c6', name: 'Fort', effectDescription: 'Place 1 Fort on a Fort Space', effectType: 'place_fort' },
+        { id: 'c7', name: 'Farmer', effectDescription: 'Take 1 Agriculture Token', effectType: 'take_token' }
+      ];
 
     game.players.push({
       id: botId,
