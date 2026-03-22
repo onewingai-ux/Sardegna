@@ -23,6 +23,36 @@ const PROVINCE_COORDS = {
   p16: { x: 501, y: 603 },
 };
 
+
+const FORT_COORDS = {
+  f1: { x: 317, y: 113 },
+  f2: { x: 380, y: 95 },
+  f3: { x: 421, y: 153 },
+  f4: { x: 543, y: 61 },
+  f5: { x: 218, y: 222 },
+  f6: { x: 327, y: 194 },
+  f7: { x: 388, y: 251 },
+  f8: { x: 460, y: 219 },
+  f9: { x: 527, y: 216 },
+  f10: { x: 600, y: 176 },
+  f11: { x: 254, y: 305 },
+  f12: { x: 409, y: 338 },
+  f13: { x: 521, y: 301 },
+  f14: { x: 588, y: 325 },
+  f15: { x: 230, y: 393 },
+  f16: { x: 478, y: 431 },
+  f17: { x: 604, y: 399 },
+  f18: { x: 262, y: 476 },
+  f19: { x: 398, y: 460 },
+  f20: { x: 516, y: 519 },
+  f21: { x: 576, y: 559 },
+  f22: { x: 218, y: 551 },
+  f23: { x: 304, y: 611 },
+  f24: { x: 395, y: 560 },
+  f25: { x: 446, y: 643 },
+  f26: { x: 276, y: 718 },
+};
+
 const socket: Socket = io(import.meta.env.VITE_SERVER_URL || window.location.origin);
 
 
@@ -176,6 +206,29 @@ function App() {
           {/* We now lock the SVG to the same aspect ratio container. The map image is rendered INSIDE the SVG to guarantee the coordinate system perfectly matches the pixels of the calibration. */}
           <svg className="w-full h-full max-h-[800px] mx-auto absolute top-0 left-0 right-0" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
             <image href={mapImage} x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
+                        {/* Draw forts */}
+            {Object.values(gameState.fortSpaces || {}).map((fortSpace) => {
+              const p = FORT_COORDS[fortSpace.id as keyof typeof FORT_COORDS];
+              if (!p) return null;
+              
+              return (
+                <g key={fortSpace.id} transform={`translate(${p.x}, ${p.y})`}>
+                  {/* Small fort marker underneath pieces */}
+                  <rect x="-8" y="-8" width="16" height="16" fill="#333" rx="2" />
+                  
+                  {/* Any placed fort pieces */}
+                  {fortSpace.forts?.map((piece: any, idx: number) => {
+                    const owner = gameState.players.find(pl => pl.id === piece.playerId);
+                    const colorMap: Record<string, string> = { red: '#ef4444', blue: '#3b82f6', yellow: '#facc15', green: '#22c55e' };
+                    const fill = colorMap[owner?.color || 'red'];
+                    return (
+                      <rect key={idx} x={-6 + (idx * 4)} y={-6 + (idx * 4)} width="12" height="12" fill={fill} stroke="white" strokeWidth="1" rx="1" />
+                    );
+                  })}
+                </g>
+              );
+            })}
+
             {/* Draw nodes */}
             {Object.values(gameState.provinces).map((province) => {
               const p = PROVINCE_COORDS[province.id as keyof typeof PROVINCE_COORDS];

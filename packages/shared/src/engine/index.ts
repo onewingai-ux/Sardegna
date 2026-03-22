@@ -1,4 +1,4 @@
-import { GameState, Player, PlayerId, CharacterCard, Province, GamePhase, FortCard } from '../types';
+import { GameState, Player, PlayerId, CharacterCard, Province, GamePhase, FortCard, FortSpace } from '../types';
 
 // The island of Sardegna is roughly rectangular with a north/south split.
 // We assign exact topology matching the 16 regions.
@@ -21,6 +21,36 @@ const ISLAND_TOPOLOGY = [
   { id: 'p16', name: 'Cagliari', resource: 'thyme_cheese', adj: ['p13', 'p14', 'p15'] }
 ];
 
+const FORT_CONNECTIONS: Record<string, string[]> = {
+  f1: ['p1', 'p2'],
+  f2: ['p2', 'p3'],
+  f3: ['p2', 'p3', 'p5'],
+  f4: ['p3', 'p5'],
+  f5: ['p1', 'p4'],
+  f6: ['p1', 'p2', 'p4'],
+  f7: ['p4', 'p2', 'p6', 'p7'],
+  f8: ['p2', 'p5', 'p7'],
+  f9: ['p5', 'p7', 'p8'],
+  f10: ['p5', 'p7', 'p8'],
+  f11: ['p4', 'p6'],
+  f12: ['p6', 'p7', 'p9', 'p10'],
+  f13: ['p7', 'p8', 'p10'],
+  f14: ['p8', 'p10'],
+  f15: ['p6', 'p9'],
+  f16: ['p9', 'p10', 'p12', 'p13'],
+  f17: ['p10', 'p13'],
+  f18: ['p9', 'p11'],
+  f19: ['p9', 'p11', 'p12'],
+  f20: ['p12', 'p13', 'p16'],
+  f21: ['p13', 'p16'],
+  f22: ['p11', 'p14'],
+  f23: ['p14', 'p11', 'p15'],
+  f24: ['p11', 'p12', 'p15'],
+  f25: ['p16', 'p12', 'p15'],
+  f26: ['p14', 'p15'],
+};
+
+
 export function createNewGame(id: string): GameState {
   
   const provinces: Record<string, Province> = {};
@@ -37,6 +67,21 @@ export function createNewGame(id: string): GameState {
     };
   });
 
+  const fortSpaces: Record<string, FortSpace> = {};
+  for (const [fId, pIds] of Object.entries(FORT_CONNECTIONS)) {
+    fortSpaces[fId] = {
+      id: fId,
+      forts: [],
+      adjacentProvinces: pIds
+    };
+    pIds.forEach(pId => {
+      if(provinces[pId]) {
+        provinces[pId].adjacentFortSpaces.push(fId);
+      }
+    });
+  }
+
+
   return {
     id,
     phase: 'lobby',
@@ -45,7 +90,7 @@ export function createNewGame(id: string): GameState {
     playerOrder: [],
     provinces,
     harbors: {},
-    fortSpaces: {},
+    fortSpaces,
     fortCardDeck: [], // Shuffled 26
     fortCardRow: [], // Dealt 11
     faceUpFortCards: 2,
@@ -62,13 +107,22 @@ export function startGame(state: GameState): GameState {
   state.activePlayerId = state.players[0].id;
   state.playerOrder = state.players.map(p => p.id);
   
-  // Setup logic: shuffle deck, deal 11 to row, face up 2, etc.
-  for (let i = 0; i < 11; i++) {
-    state.fortCardRow.push({
-      id: `fc${i + 1}`,
-      scoringProvinceIds: [ISLAND_TOPOLOGY[i % 16].id, ISLAND_TOPOLOGY[(i+1) % 16].id]
-    });
+  // Create 26 fort cards corresponding to the 26 forts
+  const allFortCards: FortCard[] = Object.entries(FORT_CONNECTIONS).map(([fId, pIds]) => ({
+    id: fId,
+    scoringProvinceIds: [...pIds]
+  }));
+
+  // Shuffle the deck (simple Fisher-Yates for MVP)
+  for (let i = allFortCards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allFortCards[i], allFortCards[j]] = [allFortCards[j], allFortCards[i]];
   }
+
+  // Deal 11 to the row, rest to deck
+  state.fortCardRow = allFortCards.slice(0, 11);
+  state.fortCardDeck = allFortCards.slice(11);
+  state.faceUpFortCards = 2;
   
   return state;
 }
