@@ -18,13 +18,15 @@ export interface Player {
   };
   tokens: {
     wheat: number;
-    wine_olive: number;
-    thyme_cheese: number;
+    wine: number;
+    olive: number;
+    thyme: number;
+    cheese: number;
   };
   isBot?: boolean;
 }
 
-export type ResourceType = 'wheat' | 'wine_olive' | 'thyme_cheese';
+export type ResourceType = 'wheat' | 'wine' | 'olive' | 'thyme' | 'cheese' | 'wine_olive' | 'thyme_cheese';
 
 export interface Province {
   id: string; // e.g., 'p1', 'p2' ... 'p16'
@@ -39,6 +41,7 @@ export interface Province {
   adjacentHarbors: string[]; // IDs of adjacent harbors
   adjacentFortSpaces: string[]; // IDs of fort spaces bordering this province
   hasAgricultureToken: boolean;
+  specificToken?: ResourceType;
   vp1: number;
   vp2: number;
 }
@@ -69,7 +72,7 @@ export interface FortCard {
   imageUrl?: string;
 }
 
-export type GamePhase = 'lobby' | 'setup' | 'playing' | 'scoring' | 'finished';
+export type GamePhase = 'lobby' | 'setup' | 'playing' | 'scoring' | 'sentinel_reveal' | 'finished';
 
 export interface GameState {
   id: string;

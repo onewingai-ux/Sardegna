@@ -142,6 +142,16 @@ function App() {
     }
   };
 
+  const handleSentinelReveal = (numCards: number) => {
+    if (!gameState) return;
+    const action: PlayerAction = {
+      type: 'SENTINEL_REVEAL',
+      playerId,
+      payload: { numCards }
+    };
+    socket.emit('playerAction', { gameId: gameState.id, action });
+  };
+
   const handleMapClick = (targetId: string, type: 'province' | 'fortSpace' | 'harbor') => {
     if (!gameState || !selectedCardId) return;
 
@@ -302,10 +312,23 @@ function App() {
                   {/* Center the pieces grid relative to the coordinate */}
                   <circle cx="0" cy="0" r="25" fill="transparent" />
                   
-                  {/* Provide a fallback in case state.hasAgricultureToken isn't present in old games */}
+                  {/* Render the specific token using an emoji if available */}
                   {(province.hasAgricultureToken || province.hasAgricultureToken === undefined) && (
                     <g transform={`translate(${(p as any).token_x - p.x}, ${(p as any).token_y - p.y})`}>
-                      <circle cx="0" cy="0" r="8" fill={province.resource === 'wheat' ? '#fde047' : province.resource === 'wine_olive' ? '#86efac' : '#fdba74'} stroke="black" strokeWidth="1" />
+                      <circle cx="0" cy="0" r="12" fill={
+                        province.specificToken === 'wheat' ? '#fde047' : 
+                        province.specificToken === 'wine' ? '#d8b4fe' : 
+                        province.specificToken === 'olive' ? '#86efac' : 
+                        province.specificToken === 'thyme' ? '#fdba74' : 
+                        province.specificToken === 'cheese' ? '#fef08a' : '#ccc'
+                      } stroke="black" strokeWidth="2" />
+                      <text x="0" y="4" textAnchor="middle" fontSize="12px">
+                         {province.specificToken === 'wheat' ? '🌾' : 
+                          province.specificToken === 'wine' ? '🍇' : 
+                          province.specificToken === 'olive' ? '🫒' : 
+                          province.specificToken === 'thyme' ? '🌿' : 
+                          province.specificToken === 'cheese' ? '🧀' : '?'}
+                      </text>
                     </g>
                   )}
                   
@@ -449,6 +472,27 @@ function App() {
           </div>
         )}
       </footer>
+      
+        {gameState.phase === 'sentinel_reveal' && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded shadow-lg max-w-sm text-center">
+              <h2 className="text-2xl font-bold mb-4">Sentinel Played!</h2>
+              <p className="mb-6">The leftmost fort card has been scored and discarded.</p>
+              {playerId === gameState.activePlayerId ? (
+                <>
+                  <p className="mb-4 font-bold">How many new fort cards would you like to reveal from the deck?</p>
+                  <div className="flex justify-center gap-4">
+                    <button onClick={() => handleSentinelReveal(1)} className="px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">Reveal 1 Card</button>
+                    <button onClick={() => handleSentinelReveal(2)} className="px-6 py-2 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">Reveal 2 Cards</button>
+                  </div>
+                </>
+              ) : (
+                <p className="font-bold text-gray-600">Waiting for active player to choose how many fort cards to reveal...</p>
+              )}
+            </div>
+          </div>
+        )}
+        
     </div>
   );
 }

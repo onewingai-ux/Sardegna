@@ -25,7 +25,8 @@ const games: Record<string, GameState> = {};
 // Helper: check if active player is bot and take action
 function handleBotTurn(gameId: string) {
   const game = games[gameId];
-  if (!game || game.phase !== 'playing' || !game.activePlayerId) return;
+  if (!game || !game.activePlayerId) return;
+  if (game.phase !== 'playing' && game.phase !== 'sentinel_reveal') return;
 
   const activePlayer = game.players.find((p: any) => p.id === game.activePlayerId);
   if (!activePlayer || !activePlayer.isBot) return;
@@ -34,11 +35,29 @@ function handleBotTurn(gameId: string) {
   setTimeout(() => {
     // Re-fetch state in case it changed
     const currentGameState = games[gameId];
-    if (!currentGameState || currentGameState.phase !== 'playing') return;
+    if (!currentGameState) return;
+    if (currentGameState.phase !== 'playing' && currentGameState.phase !== 'sentinel_reveal') return;
     
     const botPlayer = currentGameState.players.find((p: any) => p.id === currentGameState.activePlayerId);
     if (!botPlayer || !botPlayer.isBot) return;
     
+    // Handle Sentinel Reveal phase
+    if (currentGameState.phase === 'sentinel_reveal') {
+       const action: PlayerAction = {
+         type: 'SENTINEL_REVEAL',
+         playerId: botPlayer.id,
+         payload: { numCards: Math.random() > 0.5 ? 1 : 2 }
+       };
+       try {
+         games[gameId] = applyAction(currentGameState, action);
+         io.to(gameId).emit('gameStateUpdate', games[gameId]);
+         handleBotTurn(gameId);
+       } catch (err) {
+         console.error("Bot action error:", err);
+       }
+       return;
+    }
+
     // Choose a random available card
     if (botPlayer.availableCards.length > 0) {
       const randomCardIndex = Math.floor(Math.random() * botPlayer.availableCards.length);
@@ -134,7 +153,7 @@ io.on('connection', (socket: Socket) => {
         availableCards: starterHand,
         playedCard: null,
         reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 },
-        tokens: { wheat: 0, wine_olive: 0, thyme_cheese: 0 },
+        tokens: { wheat: 0, wine: 0, olive: 0, thyme: 0, cheese: 0 },
         isBot: false
       });
       game.log.push(`${playerName} joined the game.`);
@@ -180,7 +199,7 @@ io.on('connection', (socket: Socket) => {
       availableCards: starterHand,
       playedCard: null,
       reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 },
-      tokens: { wheat: 0, wine_olive: 0, thyme_cheese: 0 },
+      tokens: { wheat: 0, wine: 0, olive: 0, thyme: 0, cheese: 0 },
       isBot: true
     });
     

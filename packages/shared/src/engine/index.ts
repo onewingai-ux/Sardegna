@@ -63,7 +63,31 @@ export function createNewGame(id: string): GameState {
   
   const provinces: Record<string, Province> = {};
   
+  const specificTokens = {
+    'wheat': ['wheat', 'wheat'], // 2 wheat tokens total
+    'wine_olive': ['wine', 'wine', 'wine', 'wine', 'olive', 'olive', 'olive', 'olive'], // 4 wine, 4 olive
+    'thyme_cheese': ['thyme', 'thyme', 'thyme', 'cheese', 'cheese', 'cheese'] // 3 thyme, 3 cheese
+  };
+
+  // Shuffle the pools
+  for (const key in specificTokens) {
+    const arr = specificTokens[key as keyof typeof specificTokens];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
   ISLAND_TOPOLOGY.forEach(t => {
+    let specificToken: string | undefined = undefined;
+    if (t.resource === 'wheat' && specificTokens['wheat'].length > 0) {
+      specificToken = specificTokens['wheat'].pop();
+    } else if (t.resource === 'wine_olive' && specificTokens['wine_olive'].length > 0) {
+      specificToken = specificTokens['wine_olive'].pop();
+    } else if (t.resource === 'thyme_cheese' && specificTokens['thyme_cheese'].length > 0) {
+      specificToken = specificTokens['thyme_cheese'].pop();
+    }
+    
     provinces[t.id] = {
       id: t.id,
       name: t.name,
@@ -73,6 +97,7 @@ export function createNewGame(id: string): GameState {
       adjacentHarbors: [],
       adjacentFortSpaces: [],
       hasAgricultureToken: true,
+      specificToken: specificToken as any,
       vp1: t.vp1,
       vp2: t.vp2
     };
@@ -153,7 +178,7 @@ export function startGame(state: GameState): GameState {
 }
 
 export interface PlayerAction {
-  type: 'PLAY_CARD' | 'RESOLVE_EFFECT';
+  type: 'PLAY_CARD' | 'RESOLVE_EFFECT' | 'SENTINEL_REVEAL';
   playerId: PlayerId;
   cardId?: string;
   // Payload would contain details like 'targetProvinceId', 'targetHarborId' based on effect type
@@ -161,7 +186,7 @@ export interface PlayerAction {
 }
 
 export function applyAction(state: GameState, action: PlayerAction): GameState {
-  if (state.phase !== 'playing' && state.phase !== 'scoring') {
+  if (state.phase !== 'playing' && state.phase !== 'scoring' && state.phase !== 'sentinel_reveal') {
     throw new Error(`Cannot perform actions in phase ${state.phase}`);
   }
   if (action.playerId !== state.activePlayerId) {
@@ -196,9 +221,18 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
              }
              // Take it
              state.provinces[targetId].hasAgricultureToken = false;
-             const resourceType = state.provinces[targetId].resource;
-             player.tokens[resourceType]++;
-             state.log.push(`${player.name} took a ${resourceType} token from ${state.provinces[targetId].name}`);
+             const specificToken = state.provinces[targetId].specificToken;
+             if (specificToken) {
+                 player.tokens[specificToken]++;
+                 state.log.push(`${player.name} took a ${specificToken} token from ${state.provinces[targetId].name}`);
+             } else {
+                 // Fallback for old game states without specific tokens mapped
+                 const res = state.provinces[targetId].resource;
+                 if (res === 'wheat') player.tokens.wheat++;
+                 else if (res === 'wine_olive') player.tokens.wine++;
+                 else if (res === 'thyme_cheese') player.tokens.cheese++;
+                 state.log.push(`${player.name} took a generic token from ${state.provinces[targetId].name}`);
+             }
              nextTurn(state);
              return state;
          }
@@ -261,6 +295,24 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
        state.log.push(`${player.name} played ${card.name} but no valid target was provided.`);
     }
 
+    nextTurn(state);
+  } else if (action.type === 'SENTINEL_REVEAL') {
+    if (state.phase !== 'sentinel_reveal') throw new Error("Not in sentinel reveal phase");
+    
+    const numCards = action.payload?.numCards || 1;
+    if (numCards < 1 || numCards > 2) throw new Error("Invalid number of fort cards to reveal");
+
+    // Reveal numCards from deck to the row
+    for (let i = 0; i < numCards; i++) {
+        const nextCard = state.fortCardDeck.shift();
+        if (nextCard) {
+            state.fortCardRow.push(nextCard);
+            state.log.push(`Revealed new Fort Card: ${nextCard.id}`);
+        }
+    }
+    
+    state.phase = 'playing';
+    state.isScoringInProgress = false;
     nextTurn(state);
   }
 
