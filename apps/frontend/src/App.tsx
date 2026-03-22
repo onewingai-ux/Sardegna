@@ -231,9 +231,9 @@ function App() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header / Score Track */}
-      <header className="bg-blue-900 text-white p-4 flex justify-between items-center">
+      <header className="bg-blue-900 text-white p-4 flex flex-col md:flex-row justify-between items-center gap-2">
         <h1 className="text-xl font-bold">Game: {gameState.id}</h1>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap justify-center gap-4">
           {gameState.players.map(p => (
             <div key={p.id} className="flex flex-col items-center">
               <span className="text-sm">{p.name} ({p.color})</span>
@@ -244,19 +244,19 @@ function App() {
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-grow flex flex-col p-4 gap-4 overflow-hidden relative">
+      <main className="flex-grow flex flex-col p-2 sm:p-4 gap-2 sm:gap-4 overflow-hidden relative">
       
         {/* Subtle Sentinel Banner */}
         {gameState.phase === 'sentinel_reveal' && (
-          <div className="w-full bg-blue-900 text-white p-3 rounded shadow-md z-40 flex items-center justify-between px-6 flex-shrink-0">
-            <div>
-              <h2 className="font-bold text-lg flex items-center gap-2">
+          <div className="w-full bg-blue-900 text-white p-3 rounded shadow-md z-40 flex flex-col md:flex-row items-center justify-between px-4 sm:px-6 flex-shrink-0 gap-3">
+            <div className="text-center md:text-left">
+              <h2 className="font-bold text-base sm:text-lg flex justify-center md:justify-start items-center gap-2">
                 🛡️ Sentinel Scoring Complete
               </h2>
-              <p className="text-sm opacity-90">Revealed next card: <span className="font-bold text-yellow-300">{gameState.fortCardRow[1]?.id}</span></p>
+              <p className="text-xs sm:text-sm opacity-90">Revealed next card: <span className="font-bold text-yellow-300">{gameState.fortCardRow[1]?.id}</span></p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full md:w-auto">
               {playerId === gameState.activePlayerId ? (
                 <>
                   <span className="mr-2 text-sm font-bold">Keep or Replace?</span>
@@ -270,14 +270,14 @@ function App() {
           </div>
         )}
         
-        <div className="flex-grow flex gap-4 overflow-hidden">
-          {/* Left: Board View Placeholder */}
-          <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto min-w-[800px] min-h-[800px]">
-          <h2 className="text-2xl font-bold mb-4 absolute top-4 left-4 z-10">Board View (Island of Sardegna)</h2>
+        <div className="flex-grow flex flex-col lg:flex-row gap-2 sm:gap-4 overflow-y-auto lg:overflow-hidden w-full max-w-full">
+          {/* Left: Board View */}
+          <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-0 lg:p-4 overflow-hidden min-h-[300px] lg:min-h-[400px] flex justify-center items-center">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 absolute top-2 left-2 sm:top-4 sm:left-4 z-10">Board View</h2>
           
           
           {/* We now lock the SVG to the same aspect ratio container. The map image is rendered INSIDE the SVG to guarantee the coordinate system perfectly matches the pixels of the calibration. */}
-          <svg className="w-full h-full max-h-[800px] mx-auto absolute top-0 left-0 right-0" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+          <svg className="w-full h-full max-w-[800px] max-h-[800px] absolute inset-0 m-auto" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
             <image href={mapImage} x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
                                     {/* Draw harbors */}
             {Object.values(gameState.harbors || {}).map((harbor) => {
@@ -452,7 +452,7 @@ function App() {
            </div>
 
            {/* Action Log */}
-           <div className="bg-white p-4 rounded shadow border flex-grow overflow-y-auto">
+           <div className="bg-white p-4 rounded shadow border flex-grow overflow-y-auto min-h-[150px]">
              <h3 className="font-bold border-b mb-2 pb-1">Log</h3>
              <ul className="text-sm text-gray-700">
                {[...gameState.log].reverse().map((entry, idx) => (
@@ -466,15 +466,15 @@ function App() {
       </main>
 
       {/* Footer / Player Hand */}
-      <footer className="bg-gray-200 p-4 border-t h-48 flex flex-col justify-center items-center">
+      <footer className="bg-gray-200 p-2 border-t h-auto sm:h-48 flex flex-col justify-center items-center z-40 relative flex-shrink-0">
         {gameState.activePlayerId === playerId ? (
-          <div className="text-green-600 font-bold mb-2">It's your turn!</div>
+          <div className="text-green-600 font-bold mb-2 text-sm sm:text-base">It's your turn!</div>
         ) : (
-          <div className="text-gray-500 mb-2">Waiting for other players...</div>
+          <div className="text-gray-500 mb-2 text-sm sm:text-base">Waiting for other players...</div>
         )}
         
         {currentPlayer && (
-          <div className="flex gap-4 overflow-x-auto overflow-y-hidden w-full max-w-full px-4 pb-2 justify-center">
+          <div className="flex gap-2 sm:gap-4 items-center overflow-x-auto overflow-y-hidden w-full max-w-full px-2 sm:px-4 pb-2 justify-start sm:justify-center" style={{ WebkitOverflowScrolling: 'touch' }}>
             {currentPlayer.availableCards.map(card => (
               <button
                 key={card.id}
