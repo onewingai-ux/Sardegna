@@ -8,17 +8,17 @@ const ISLAND_TOPOLOGY = [
   { id: 'p3', name: 'Olbia', resource: 'wine_olive', adj: ['p2', 'p4', 'p6'], vp1: 5, vp2: 2 },
   { id: 'p4', name: 'Alghero', resource: 'wine_olive', adj: ['p3', 'p7', 'p8'], vp1: 5, vp2: 2 },
   { id: 'p5', name: 'Bosa', resource: 'wheat', adj: ['p1', 'p2', 'p6', 'p9'], vp1: 6, vp2: 3 },
-  { id: 'p6', name: 'Macomer', resource: 'thyme_cheese', adj: ['p2', 'p3', 'p5', 'p7', 'p9', 'p10'], vp1: 3, vp2: 1 },
-  { id: 'p7', name: 'Nuoro', resource: 'wine_olive', adj: ['p4', 'p6', 'p8', 'p10'], vp1: 2, vp2: 1 },
-  { id: 'p8', name: 'Dorgali', resource: 'thyme_cheese', adj: ['p4', 'p7', 'p11'], vp1: 3, vp2: 1 },
-  { id: 'p9', name: 'Oristano', resource: 'wheat', adj: ['p5', 'p6', 'p10', 'p12'], vp1: 5, vp2: 2 },
-  { id: 'p10', name: 'Sorgono', resource: 'wine_olive', adj: ['p6', 'p7', 'p9', 'p11', 'p12', 'p13'], vp1: 4, vp2: 2 },
-  { id: 'p11', name: 'Lanusei', resource: 'thyme_cheese', adj: ['p8', 'p10', 'p13', 'p14'], vp1: 3, vp2: 1 },
-  { id: 'p12', name: 'Iglesias', resource: 'wine_olive', adj: ['p9', 'p10', 'p13', 'p15'], vp1: 2, vp2: 1 },
+  { id: 'p6', name: 'Macomer', resource: 'wine_olive', adj: ['p2', 'p3', 'p5', 'p7', 'p9', 'p10'], vp1: 3, vp2: 1 },
+  { id: 'p7', name: 'Nuoro', resource: 'thyme_cheese', adj: ['p4', 'p6', 'p8', 'p10'], vp1: 2, vp2: 1 },
+  { id: 'p8', name: 'Dorgali', resource: 'wine_olive', adj: ['p4', 'p7', 'p11'], vp1: 3, vp2: 1 },
+  { id: 'p9', name: 'Oristano', resource: 'wine_olive', adj: ['p5', 'p6', 'p10', 'p12'], vp1: 5, vp2: 2 },
+  { id: 'p10', name: 'Sorgono', resource: 'thyme_cheese', adj: ['p6', 'p7', 'p9', 'p11', 'p12', 'p13'], vp1: 4, vp2: 2 },
+  { id: 'p11', name: 'Lanusei', resource: 'wine_olive', adj: ['p8', 'p10', 'p13', 'p14'], vp1: 3, vp2: 1 },
+  { id: 'p12', name: 'Iglesias', resource: 'thyme_cheese', adj: ['p9', 'p10', 'p13', 'p15'], vp1: 2, vp2: 1 },
   { id: 'p13', name: 'Sanluri', resource: 'thyme_cheese', adj: ['p10', 'p11', 'p12', 'p14', 'p15', 'p16'], vp1: 2, vp2: 1 },
-  { id: 'p14', name: 'Muravera', resource: 'wine_olive', adj: ['p11', 'p13', 'p16'], vp1: 2, vp2: 1 },
+  { id: 'p14', name: 'Muravera', resource: 'thyme_cheese', adj: ['p11', 'p13', 'p16'], vp1: 2, vp2: 1 },
   { id: 'p15', name: 'Carbonia', resource: 'wine_olive', adj: ['p12', 'p13', 'p16'], vp1: 5, vp2: 2 },
-  { id: 'p16', name: 'Cagliari', resource: 'thyme_cheese', adj: ['p13', 'p14', 'p15'], vp1: 4, vp2: 2 }
+  { id: 'p16', name: 'Cagliari', resource: 'wheat', adj: ['p13', 'p14', 'p15'], vp1: 4, vp2: 2 }
 ];
 
 const FORT_CONNECTIONS: Record<string, string[]> = {

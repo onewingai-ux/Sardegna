@@ -5,22 +5,22 @@ import mapImage from "./assets/map.png";
 
 
 const PROVINCE_COORDS = {
-  p1: { x: 278, y: 148 },
-  p2: { x: 381, y: 149 },
-  p3: { x: 427, y: 89 },
-  p4: { x: 290, y: 235 },
-  p5: { x: 473, y: 164 },
-  p6: { x: 357, y: 313 },
-  p7: { x: 450, y: 267 },
-  p8: { x: 574, y: 224 },
-  p9: { x: 375, y: 389 },
-  p10: { x: 456, y: 375 },
-  p11: { x: 330, y: 528 },
-  p12: { x: 441, y: 477 },
-  p13: { x: 517, y: 462 },
-  p14: { x: 267, y: 588 },
-  p15: { x: 381, y: 606 },
-  p16: { x: 501, y: 603 },
+  p1: { x: 278, y: 148, token_x: 281, token_y: 181 },
+  p2: { x: 381, y: 149, token_x: 405, token_y: 209 },
+  p3: { x: 427, y: 89, token_x: 470, token_y: 115 },
+  p4: { x: 290, y: 235, token_x: 325, token_y: 266 },
+  p5: { x: 473, y: 164, token_x: 492, token_y: 195 },
+  p6: { x: 357, y: 313, token_x: 342, token_y: 349 },
+  p7: { x: 450, y: 267, token_x: 489, token_y: 290 },
+  p8: { x: 574, y: 224, token_x: 604, token_y: 266 },
+  p9: { x: 375, y: 389, token_x: 397, token_y: 433 },
+  p10: { x: 456, y: 375, token_x: 543, token_y: 371 },
+  p11: { x: 330, y: 528, token_x: 353, token_y: 553 },
+  p12: { x: 441, y: 477, token_x: 460, token_y: 554 },
+  p13: { x: 517, y: 462, token_x: 564, token_y: 492 },
+  p14: { x: 267, y: 588, token_x: 294, token_y: 651 },
+  p15: { x: 381, y: 606, token_x: 391, token_y: 641 },
+  p16: { x: 501, y: 603, token_x: 546, token_y: 641 },
 };
 
 
@@ -304,7 +304,7 @@ function App() {
                   
                   {/* Provide a fallback in case state.hasAgricultureToken isn't present in old games */}
                   {(province.hasAgricultureToken || province.hasAgricultureToken === undefined) && (
-                    <g transform="translate(0, -20)">
+                    <g transform={`translate(${(p as any).token_x - p.x}, ${(p as any).token_y - p.y})`}>
                       <circle cx="0" cy="0" r="8" fill={province.resource === 'wheat' ? '#fde047' : province.resource === 'wine_olive' ? '#86efac' : '#fdba74'} stroke="black" strokeWidth="1" />
                     </g>
                   )}
