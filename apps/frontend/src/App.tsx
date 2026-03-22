@@ -5,22 +5,22 @@ import mapImage from "./assets/map.png";
 
 
 const PROVINCE_COORDS = {
-  p1: { x: 300, y: 120 }, // Sassari (NW)
-  p2: { x: 380, y: 80 }, // Castelsardo (N)
-  p3: { x: 530, y: 150 }, // Olbia (NE)
-  p4: { x: 230, y: 250 }, // Alghero (W-NW)
-  p5: { x: 330, y: 280 }, // Bosa (W)
-  p6: { x: 420, y: 240 }, // Macomer (Central-N)
-  p7: { x: 500, y: 320 }, // Nuoro (Central-E)
-  p8: { x: 560, y: 390 }, // Dorgali (E)
-  p9: { x: 270, y: 430 }, // Oristano (W)
-  p10: { x: 420, y: 420 }, // Sorgono (Central)
-  p11: { x: 540, y: 500 }, // Lanusei (E)
-  p12: { x: 280, y: 600 }, // Iglesias (SW)
-  p13: { x: 400, y: 580 }, // Sanluri (Central-S)
-  p14: { x: 560, y: 640 }, // Muravera (SE)
-  p15: { x: 280, y: 720 }, // Carbonia (SW-tip)
-  p16: { x: 440, y: 710 }, // Cagliari (S)
+  p1: { x: 216, y: 120 },
+  p2: { x: 371, y: 80 },
+  p3: { x: 662, y: 150 },
+  p4: { x: 80, y: 250 },
+  p5: { x: 274, y: 280 },
+  p6: { x: 448, y: 240 },
+  p7: { x: 604, y: 320 },
+  p8: { x: 720, y: 390 },
+  p9: { x: 158, y: 430 },
+  p10: { x: 448, y: 420 },
+  p11: { x: 681, y: 500 },
+  p12: { x: 177, y: 600 },
+  p13: { x: 410, y: 580 },
+  p14: { x: 720, y: 640 },
+  p15: { x: 177, y: 720 },
+  p16: { x: 487, y: 710 },
 };
 
 const socket: Socket = io(import.meta.env.VITE_SERVER_URL || window.location.origin);
@@ -172,16 +172,10 @@ function App() {
         <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto min-w-[800px] min-h-[800px]">
           <h2 className="text-2xl font-bold mb-4 absolute top-4 left-4 z-10">Board View (Island of Sardegna)</h2>
           
-          <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-            {/* We use a public domain or abstract map of Sardinia as a background */}
-            <img 
-src={mapImage}
-              alt="Sardinia Map"
-              className="object-contain h-[750px]"
-            />
-          </div>
           
-          <svg className="w-full h-full absolute top-0 left-0" viewBox="0 0 800 800">
+          {/* We now lock the SVG to the same aspect ratio container. The map image is rendered INSIDE the SVG to guarantee the coordinate system perfectly matches the pixels of the calibration. */}
+          <svg className="w-full h-full max-h-[800px] mx-auto absolute top-0 left-0 right-0" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+            <image href={mapImage} x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
             {/* Draw nodes */}
             {Object.values(gameState.provinces).map((province) => {
               const p = PROVINCE_COORDS[province.id as keyof typeof PROVINCE_COORDS];
