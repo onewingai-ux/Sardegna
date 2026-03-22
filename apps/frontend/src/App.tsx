@@ -244,10 +244,35 @@ function App() {
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-grow flex p-4 gap-4 overflow-hidden">
+      <main className="flex-grow flex flex-col p-4 gap-4 overflow-hidden relative">
+      
+        {/* Subtle Sentinel Banner */}
+        {gameState.phase === 'sentinel_reveal' && (
+          <div className="w-full bg-blue-900 text-white p-3 rounded shadow-md z-40 flex items-center justify-between px-6 flex-shrink-0">
+            <div>
+              <h2 className="font-bold text-lg flex items-center gap-2">
+                🛡️ Sentinel Scoring Complete
+              </h2>
+              <p className="text-sm opacity-90">Revealed next card: <span className="font-bold text-yellow-300">{gameState.fortCardRow[1]?.id}</span></p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {playerId === gameState.activePlayerId ? (
+                <>
+                  <span className="mr-2 text-sm font-bold">Keep or Replace?</span>
+                  <button onClick={() => handleSentinelReveal(true)} className="px-4 py-1.5 bg-green-500 text-white text-sm font-bold rounded hover:bg-green-600 transition shadow">Keep Card</button>
+                  <button onClick={() => handleSentinelReveal(false)} className="px-4 py-1.5 bg-red-500 text-white text-sm font-bold rounded hover:bg-red-600 transition shadow">Discard & Replace</button>
+                </>
+              ) : (
+                <span className="text-sm italic opacity-80">Waiting for active player to decide...</span>
+              )}
+            </div>
+          </div>
+        )}
         
-        {/* Left: Board View Placeholder */}
-        <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto min-w-[800px] min-h-[800px]">
+        <div className="flex-grow flex gap-4 overflow-hidden">
+          {/* Left: Board View Placeholder */}
+          <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-4 overflow-auto min-w-[800px] min-h-[800px]">
           <h2 className="text-2xl font-bold mb-4 absolute top-4 left-4 z-10">Board View (Island of Sardegna)</h2>
           
           
@@ -436,6 +461,7 @@ function App() {
              </ul>
            </div>
         </div>
+      </div>
 
       </main>
 
@@ -473,26 +499,7 @@ function App() {
         )}
       </footer>
       
-        {gameState.phase === 'sentinel_reveal' && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-8 rounded shadow-lg max-w-md text-center">
-              <h2 className="text-2xl font-bold mb-4">Sentinel Played!</h2>
-              <p className="mb-4">The leftmost fort card has been scored and discarded.</p>
-              <p className="mb-6">The next Fort Card in the row was revealed: <span className="font-bold text-lg text-blue-800">{gameState.fortCardRow[1]?.id}</span></p>
-              {playerId === gameState.activePlayerId ? (
-                <>
-                  <p className="mb-4 font-bold">Would you like to keep this card, or discard it to the bottom of the deck and draw a new one?</p>
-                  <div className="flex justify-center gap-4 mt-6">
-                    <button onClick={() => handleSentinelReveal(true)} className="px-6 py-3 bg-green-500 text-white font-bold rounded hover:bg-green-600 shadow">Keep Card</button>
-                    <button onClick={() => handleSentinelReveal(false)} className="px-6 py-3 bg-red-500 text-white font-bold rounded hover:bg-red-600 shadow">Discard & Replace</button>
-                  </div>
-                </>
-              ) : (
-                <p className="font-bold text-gray-600 mt-6">Waiting for active player to decide whether to keep or replace the revealed card...</p>
-              )}
-            </div>
-          </div>
-        )}
+
         
     </div>
   );
