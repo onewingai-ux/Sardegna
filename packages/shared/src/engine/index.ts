@@ -155,21 +155,37 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
     
     state.log.push(`Player ${player.name} played ${card.name}`);
 
-    // Let's add a fake piece placement so the board changes visually
-    const randomProvince = ISLAND_TOPOLOGY[Math.floor(Math.random() * 16)].id;
-    state.provinces[randomProvince].pieces.push({
-      playerId: player.id,
-      type: 'villager'
-    });
-    state.log.push(`${player.name} placed a villager in ${state.provinces[randomProvince].name}`);
-
-    // Immediately resolve Sentinel
     if (card.effectType === 'sentinel') {
       return triggerSentinel(state);
     }
-    
-    // For other cards, a real engine would wait for subsequent payload actions, but for the MVP skeleton:
-    // It's assumed the client sends RESOLVE_EFFECT next, or combined PLAY_CARD with payload.
+
+    if (action.payload && action.payload.targetId) {
+      const { targetId, targetType } = action.payload;
+      
+      if (targetType === 'province' && state.provinces[targetId]) {
+         const typeMap: Record<string, 'villager' | 'village' | 'priest'> = {
+           'place_villager': 'villager',
+           'place_village': 'village',
+           'move_priest': 'priest'
+         };
+         const pieceType = typeMap[card.effectType] || 'villager';
+         
+         state.provinces[targetId].pieces.push({
+           playerId: player.id,
+           type: pieceType
+         });
+         state.log.push(`${player.name} placed a ${pieceType} in ${state.provinces[targetId].name}`);
+      } else if (targetType === 'fortSpace' && state.fortSpaces[targetId] && card.effectType === 'place_fort') {
+         state.fortSpaces[targetId].forts.push({
+           playerId: player.id
+         });
+         state.log.push(`${player.name} placed a fort at ${targetId}`);
+      }
+    } else {
+       // Fallback for bot or error
+       state.log.push(`${player.name} played ${card.name} but no valid target was provided.`);
+    }
+
     nextTurn(state);
   }
 

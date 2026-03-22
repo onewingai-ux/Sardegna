@@ -59,6 +59,7 @@ const socket: Socket = io(import.meta.env.VITE_SERVER_URL || window.location.ori
 function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerId, setPlayerId] = useState<PlayerId>('');
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState('');
   const [color, setColor] = useState<Color>('red');
   const [gameId, setGameId] = useState('');
@@ -109,14 +110,42 @@ function App() {
     socket.emit('addBot', { gameId: gameState.id });
   };
 
-  const playCard = (cardId: string) => {
+  const playCard = (card: any) => {
     if (!gameState) return;
+    
+    // If it's the Sentinel card, it doesn't need a target, just play it
+    if (card.effectType === 'sentinel') {
+      const action: PlayerAction = {
+        type: 'PLAY_CARD',
+        playerId,
+        cardId: card.id
+      };
+      socket.emit('playerAction', { gameId: gameState.id, action });
+      setSelectedCardId(null);
+      return;
+    }
+    
+    // Otherwise, we wait for the user to click a target on the map
+    if (selectedCardId === card.id) {
+       setSelectedCardId(null); // toggle off
+    } else {
+       setSelectedCardId(card.id);
+    }
+  };
+
+  const handleMapClick = (targetId: string, type: 'province' | 'fortSpace') => {
+    if (!gameState || !selectedCardId) return;
+
+    // We have a pending card to play, and the user just clicked a map target
     const action: PlayerAction = {
       type: 'PLAY_CARD',
       playerId,
-      cardId
+      cardId: selectedCardId,
+      payload: { targetId, targetType: type }
     };
+    
     socket.emit('playerAction', { gameId: gameState.id, action });
+    setSelectedCardId(null); // reset UI state after sending
   };
 
   if (!gameState) {
@@ -212,9 +241,9 @@ function App() {
               if (!p) return null;
               
               return (
-                <g key={fortSpace.id} transform={`translate(${p.x}, ${p.y})`}>
-                  {/* Small fort marker underneath pieces */}
-                  <rect x="-8" y="-8" width="16" height="16" fill="#333" rx="2" />
+                <g key={fortSpace.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(fortSpace.id, 'fortSpace')} style={{cursor: selectedCardId ? 'crosshair' : 'default'}}>
+                  {/* Small fort marker removed per user request */}
+                  <circle cx="0" cy="0" r="15" fill="transparent" />
                   
                   {/* Any placed fort pieces */}
                   {fortSpace.forts?.map((piece: any, idx: number) => {
@@ -237,9 +266,10 @@ function App() {
               
 
               return (
-                <g key={province.id} transform={`translate(${p.x}, ${p.y})`}>
+                <g key={province.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(province.id, 'province')} style={{cursor: selectedCardId ? 'crosshair' : 'default'}}>
                   {/* We only draw the pieces directly over the map coordinate */}
                   {/* Center the pieces grid relative to the coordinate */}
+                  <circle cx="0" cy="0" r="25" fill="transparent" />
                   <g transform="translate(0, 0)">
                     {province.pieces.map((piece: any, idx: number) => {
                       const owner = gameState.players.find(pl => pl.id === piece.playerId);
@@ -356,7 +386,7 @@ function App() {
               <button
                 key={card.id}
                 disabled={gameState.activePlayerId !== playerId || gameState.phase !== 'playing'}
-                onClick={() => playCard(card.id)}
+                onClick={() => playCard(card)}
                 className="flex-shrink-0 w-32 h-40 bg-white border-2 border-gray-400 rounded-lg shadow hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex flex-col p-2"
               >
                 <div className="font-bold text-sm text-center border-b pb-1 mb-1">{card.name}</div>

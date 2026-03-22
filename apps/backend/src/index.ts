@@ -44,10 +44,23 @@ function handleBotTurn(gameId: string) {
       const randomCardIndex = Math.floor(Math.random() * botPlayer.availableCards.length);
       const chosenCard = botPlayer.availableCards[randomCardIndex];
       
+      // Give bot a valid random target depending on card effect
+      const payload: any = {};
+      if (chosenCard.effectType === 'place_fort') {
+          const fortIds = Object.keys(currentGameState.fortSpaces || {});
+          payload.targetId = fortIds[Math.floor(Math.random() * fortIds.length)];
+          payload.targetType = 'fortSpace';
+      } else if (chosenCard.effectType !== 'sentinel') {
+          const provIds = Object.keys(currentGameState.provinces || {});
+          payload.targetId = provIds[Math.floor(Math.random() * provIds.length)];
+          payload.targetType = 'province';
+      }
+
       const action: PlayerAction = {
         type: 'PLAY_CARD',
         playerId: botPlayer.id,
-        cardId: chosenCard.id
+        cardId: chosenCard.id,
+        payload
       };
       
       try {
