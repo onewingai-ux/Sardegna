@@ -495,36 +495,55 @@ function App() {
         </div>
 
         {/* Right: Fort Cards & Logs */}
-        <div className="w-64 flex flex-col gap-4">
-           {/* Fort Cards Row */}
-           <div className="bg-white p-4 rounded shadow border h-48 overflow-y-auto">
-             <h3 className="font-bold border-b mb-2 pb-1">Fort Cards</h3>
-             <p className="text-sm">Deck: {gameState.fortCardDeck.length}</p>
-             <p className="text-sm">Row: {gameState.fortCardRow.length}</p>
-             <div className="flex gap-2 overflow-x-auto mt-2 pb-2">
-               {gameState.fortCardRow.slice(0, gameState.faceUpFortCards).map((card: any) => (
-                 <div key={card.id} className="min-w-[80px] h-24 bg-white border-2 border-orange-400 rounded shadow-md p-1 flex flex-col justify-between text-xs text-center">
-                   <div className="font-bold border-b pb-1 mb-1">{card.id.toUpperCase()}</div>
-                   <div className="text-[10px] text-gray-600">Scores:</div>
-                   <div className="font-bold text-gray-800">{card.scoringProvinceIds.map((pid: string) => pid.replace('p', 'P')).join(', ')}</div>
-                 </div>
-               ))}
-               {gameState.fortCardRow.slice(gameState.faceUpFortCards).map((_card: any, idx: number) => (
-                 <div key={idx} className="min-w-[80px] h-24 bg-blue-800 border-2 border-blue-900 rounded shadow-md p-2 flex items-center justify-center text-blue-200 opacity-80">
-                   Back
-                 </div>
-               ))}
+        <div className="w-full lg:w-72 flex flex-col gap-4 flex-shrink-0 z-20">
+           {/* Fort Cards Compact View */}
+           <div className="bg-white rounded-lg shadow-md border-t-4 border-orange-400 overflow-hidden flex flex-col flex-shrink-0">
+             <div className="bg-orange-50 px-4 py-2 border-b flex justify-between items-center text-sm font-bold text-orange-900">
+               <span>🏰 Fort Cards</span>
+             </div>
+             
+             <div className="p-4 flex gap-4 items-center justify-center bg-gray-50/50">
+               {/* Deck/Face Down Summary */}
+               <div className="flex flex-col gap-2 border-r border-gray-200 pr-4">
+                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Row Left</div>
+                 <div className="text-3xl font-black text-gray-800 text-center">{gameState.fortCardRow.length - gameState.faceUpFortCards}</div>
+                 <div className="text-[10px] text-gray-400 text-center">Deck: {gameState.fortCardDeck.length}</div>
+               </div>
+
+               {/* Face Up Cards */}
+               <div className="flex gap-2">
+                 {gameState.fortCardRow.slice(0, gameState.faceUpFortCards).map((card: any, idx: number) => (
+                   <div key={card.id} className={`relative w-20 bg-[#f8f5e6] border-2 border-[#d4c5a9] rounded-md shadow p-2 flex flex-col items-center justify-center transition hover:-translate-y-1 ${idx === 0 ? 'ring-2 ring-red-400 ring-offset-1 scale-105 z-10' : 'opacity-80 scale-95'}`}>
+                     {idx === 0 && <div className="absolute -top-2 -left-2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm shadow whitespace-nowrap">NEXT</div>}
+                     <div className="text-xl opacity-80 mb-1">🛡️</div>
+                     <div className="font-black text-base text-gray-800 mb-1">{card.id.toUpperCase()}</div>
+                     <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Scores</div>
+                     <div className="font-bold text-gray-700 text-xs text-center leading-tight">{card.scoringProvinceIds.map((pid: string) => pid.replace('p', 'P')).join(', ')}</div>
+                   </div>
+                 ))}
+                 {gameState.faceUpFortCards === 0 && (
+                    <div className="w-20 h-full border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400 italic text-center p-2">No Face Up Cards</div>
+                 )}
+               </div>
              </div>
            </div>
 
-           {/* Action Log */}
-           <div className="bg-white p-4 rounded shadow border flex-grow overflow-y-auto min-h-[150px]">
-             <h3 className="font-bold border-b mb-2 pb-1">Log</h3>
-             <ul className="text-sm text-gray-700">
-               {[...gameState.log].reverse().map((entry, idx) => (
-                 <li key={idx} className="mb-1">{entry}</li>
-               ))}
-             </ul>
+           {/* Log View */}
+           <div className="bg-white rounded-lg shadow-md border-t-4 border-gray-400 flex-grow overflow-hidden flex flex-col min-h-[200px]">
+             <div className="bg-gray-50 px-4 py-2 border-b text-sm font-bold text-gray-700 flex justify-between items-center">
+               <span>📜 Game Log</span>
+               <span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded text-gray-600">Event {gameState.scoringEventsCount}/11</span>
+             </div>
+             <div className="flex-1 overflow-y-auto p-0">
+               <ul className="text-sm">
+                 {[...gameState.log].reverse().map((entry, idx) => (
+                   <li key={idx} className={`p-3 border-b border-gray-100 last:border-0 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} flex gap-3 items-start`}>
+                     <span className="text-gray-400 text-xs font-mono mt-0.5 flex-shrink-0 select-none">{(gameState.log.length - idx).toString().padStart(2, '0')}</span>
+                     <span className="text-gray-800 leading-snug">{entry}</span>
+                   </li>
+                 ))}
+               </ul>
+             </div>
            </div>
         </div>
       </div>
