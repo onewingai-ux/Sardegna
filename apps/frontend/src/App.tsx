@@ -72,6 +72,12 @@ function App() {
   const [playerName, setPlayerName] = useState('');
   const [color, setColor] = useState<Color>('red');
   const [gameId, setGameId] = useState('');
+  
+  // Zoom & Pan State
+  const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDraggingMap, setIsDraggingMap] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     // Basic session persistence
@@ -154,6 +160,36 @@ function App() {
     } else {
        setSelectedCardId(card.id);
     }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const zoomSensitivity = 0.05;
+    const delta = e.deltaY > 0 ? -zoomSensitivity : zoomSensitivity;
+    setScale(s => Math.min(Math.max(0.5, s + delta), 3)); // Restrict between 0.5x and 3x zoom
+  };
+
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDraggingMap(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    setLastMousePos({ x: clientX, y: clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDraggingMap) return;
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    
+    const dx = clientX - lastMousePos.x;
+    const dy = clientY - lastMousePos.y;
+    
+    setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+    setLastMousePos({ x: clientX, y: clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDraggingMap(false);
   };
 
   const handleSentinelReveal = (keep: boolean) => {
@@ -307,13 +343,36 @@ function App() {
         
         <div className="flex-grow flex flex-col lg:flex-row gap-2 sm:gap-4 overflow-y-auto lg:overflow-hidden w-full max-w-full">
           {/* Left: Board View */}
-          <div className="flex-grow bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] bg-[#0c2f4d] rounded-2xl border-4 border-[#2b5275] shadow-inner relative p-0 lg:p-4 overflow-hidden min-h-[300px] lg:min-h-[400px] flex justify-center items-center">
+          <div 
+            className="flex-grow bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] bg-[#0c2f4d] rounded-2xl border-4 border-[#2b5275] shadow-inner relative p-0 lg:p-4 overflow-hidden min-h-[300px] lg:min-h-[400px] flex justify-center items-center select-none"
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleMouseDown}
+            onTouchMove={handleMouseMove}
+            onTouchEnd={handleMouseUp}
+            style={{ cursor: isDraggingMap ? 'grabbing' : 'grab' }}
+          >
           <div className="absolute inset-0 bg-blue-900/30 mix-blend-multiply pointer-events-none"></div>
-          <h2 className="text-xl sm:text-2xl font-black mb-4 absolute top-3 left-3 sm:top-4 sm:left-4 z-10 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-50 select-none">Sardegna</h2>
           
+          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 flex flex-col gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-50 select-none pointer-events-none">Sardegna</h2>
+              <div className="flex gap-2 bg-black/40 p-1.5 rounded-lg backdrop-blur-sm pointer-events-auto">
+                 <button onClick={() => setScale(s => Math.min(3, s + 0.2))} className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded font-bold transition">+</button>
+                 <button onClick={() => { setScale(1); setPan({x:0, y:0}); }} className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded font-bold transition">⟲</button>
+                 <button onClick={() => setScale(s => Math.max(0.5, s - 0.2))} className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded font-bold transition">-</button>
+              </div>
+          </div>
           
           {/* We now lock the SVG to the same aspect ratio container. The map image is rendered INSIDE the SVG to guarantee the coordinate system perfectly matches the pixels of the calibration. */}
-          <svg className="w-full h-full max-w-[800px] max-h-[800px] absolute inset-0 m-auto drop-shadow-xl" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+          <svg 
+            className="w-full h-full max-w-[800px] max-h-[800px] absolute inset-0 m-auto drop-shadow-xl transition-transform duration-75 ease-out" 
+            viewBox="0 0 800 800" 
+            preserveAspectRatio="xMidYMid meet"
+            style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}
+          >
             <defs>
               <filter id="tokenShadow" x="-20%" y="-20%" width="140%" height="140%">
                 <feDropShadow dx="2" dy="4" stdDeviation="3" floodOpacity="0.5" />
