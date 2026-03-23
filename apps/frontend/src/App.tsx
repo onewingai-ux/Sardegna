@@ -570,14 +570,15 @@ function App() {
                </div>
 
                {/* Face Up Cards */}
-               <div className="flex gap-2">
+               <div className="flex gap-3 px-2">
                  {gameState.fortCardRow.slice(0, gameState.faceUpFortCards).map((card: any, idx: number) => (
-                   <div key={card.id} className={`relative w-20 bg-[#f8f5e6] border-2 border-[#d4c5a9] rounded-md shadow p-2 flex flex-col items-center justify-center transition hover:-translate-y-1 ${idx === 0 ? 'ring-2 ring-red-400 ring-offset-1 scale-105 z-10' : 'opacity-80 scale-95'}`}>
-                     {idx === 0 && <div className="absolute -top-2 -left-2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm shadow whitespace-nowrap">NEXT</div>}
-                     <div className="text-xl opacity-80 mb-1">🛡️</div>
-                     <div className="font-black text-base text-gray-800 mb-1">{card.id.toUpperCase()}</div>
-                     <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Scores</div>
-                     <div className="font-bold text-gray-700 text-xs text-center leading-tight">{card.scoringProvinceIds.map((pid: string) => pid.replace('p', 'P')).join(', ')}</div>
+                   <div key={card.id} className={`relative min-w-[85px] bg-[#f8f5e6] border-2 border-[#d4c5a9] rounded-lg shadow-sm p-2 flex flex-col items-center justify-center transition ${idx === 0 ? 'ring-2 ring-red-400 ring-offset-2 scale-110 z-10 shadow-md' : 'opacity-80 scale-95 hover:opacity-100 hover:scale-100'}`}>
+                     {idx === 0 && <div className="absolute -top-2.5 -left-2.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow whitespace-nowrap tracking-wider">NEXT</div>}
+                     <div className="text-xl opacity-80 mb-0.5">🛡️</div>
+                     <div className="font-black text-lg text-gray-800 mb-1 leading-none">{card.id.toUpperCase()}</div>
+                     <div className="w-full border-t border-[#d4c5a9] opacity-50 mb-1"></div>
+                     <div className="text-[8px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Scores</div>
+                     <div className="font-bold text-gray-800 text-xs text-center leading-tight">{card.scoringProvinceIds.map((pid: string) => pid.replace('p', 'P')).join(', ')}</div>
                    </div>
                  ))}
                  {gameState.faceUpFortCards === 0 && (
@@ -610,7 +611,7 @@ function App() {
       </main>
 
       {/* Footer / Player Hand */}
-      <footer className="bg-white/80 backdrop-blur-md p-2 border-t-2 border-white/50 h-auto sm:h-56 flex flex-col justify-start sm:justify-center items-center z-40 relative flex-shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+      <footer className="bg-white/80 backdrop-blur-md pt-2 pb-4 border-t-2 border-white/50 flex flex-col justify-start sm:justify-center items-center z-40 relative flex-shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
         {gameState.activePlayerId === playerId ? (
           <div className="text-green-600 font-black mb-1 sm:mb-2 text-sm sm:text-base flex items-center gap-2 animate-bounce-slow">✨ YOUR TURN ✨</div>
         ) : (
@@ -618,7 +619,7 @@ function App() {
         )}
         
         {currentPlayer && (
-          <div className="flex gap-2 sm:gap-4 items-center overflow-x-auto overflow-y-hidden w-full max-w-full px-2 sm:px-4 pb-2 justify-start sm:justify-center" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-3 sm:gap-4 items-stretch overflow-x-auto w-full max-w-full px-4 pt-4 pb-6 justify-start md:justify-center min-h-[220px]" style={{ WebkitOverflowScrolling: 'touch' }}>
             {currentPlayer.availableCards.map(card => {
               const isSelected = selectedCardId === card.id;
               return (
@@ -626,25 +627,25 @@ function App() {
                 key={card.id}
                 disabled={gameState.activePlayerId !== playerId || gameState.phase !== 'playing'}
                 onClick={() => playCard(card)}
-                className={`flex-shrink-0 w-32 sm:w-36 h-44 sm:h-52 bg-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex flex-col items-center justify-between p-3 transition-all duration-200 relative overflow-hidden border-[3px] 
+                className={`flex-shrink-0 w-[140px] sm:w-[160px] h-[190px] sm:h-[220px] bg-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex flex-col items-center justify-start p-3 sm:p-4 transition-all duration-200 relative overflow-hidden border-[3px] 
                   ${isSelected ? 'border-yellow-400 -translate-y-4 shadow-[0_8px_20px_rgba(250,204,21,0.4)]' : 'border-gray-200 hover:-translate-y-2 hover:shadow-[0_8px_16px_rgba(0,0,0,0.2)] hover:border-blue-300'} 
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] disabled:hover:border-gray-200`}
               >
                 {/* Decorative card header */}
-                <div className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-blue-100 to-transparent"></div>
+                <div className="absolute top-0 left-0 w-full h-10 bg-gradient-to-b from-blue-100 to-transparent pointer-events-none"></div>
                 
-                <div className="z-10 flex flex-col items-center w-full">
-                  <div className="text-2xl mb-1 drop-shadow-md">{getCardIcon(card.effectType)}</div>
-                  <div className="font-extrabold text-sm sm:text-base text-gray-800 text-center uppercase tracking-wide border-b border-gray-300 w-full pb-1 mb-2">{card.name}</div>
+                <div className="z-10 flex flex-col items-center w-full mb-auto mt-1">
+                  <div className="text-3xl mb-1 drop-shadow-sm">{getCardIcon(card.effectType)}</div>
+                  <div className="font-extrabold text-xs sm:text-sm text-gray-800 text-center uppercase tracking-wide border-b-2 border-gray-200 w-full pb-1 mb-2 leading-tight min-h-[30px] flex items-center justify-center">{card.name}</div>
                 </div>
                 
-                <div className="text-[10px] sm:text-xs text-gray-600 flex-grow flex items-center text-center font-medium leading-snug px-1">
+                <div className="text-[10px] sm:text-xs text-gray-600 w-full text-center font-medium leading-snug px-1 line-clamp-4">
                    {card.effectDescription}
                 </div>
                 
                 {isSelected && card.effectType !== 'sentinel' && (
-                   <div className="absolute bottom-0 left-0 w-full bg-yellow-400 text-yellow-900 text-[10px] font-bold py-1 text-center animate-pulse">
-                     CLICK MAP TARGET
+                   <div className="absolute bottom-0 left-0 w-full bg-yellow-400 text-yellow-900 text-[10px] sm:text-xs font-bold py-1.5 text-center animate-pulse shadow-inner">
+                     CLICK TARGET
                    </div>
                 )}
               </button>
@@ -652,11 +653,11 @@ function App() {
             })}
             
             {currentPlayer.playedCard && (
-              <div className="flex-shrink-0 w-32 sm:w-36 h-44 sm:h-52 bg-gray-100 border-[3px] border-dashed border-gray-400 rounded-xl shadow-inner flex flex-col items-center justify-center p-3 opacity-60 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gray-300 opacity-20 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:8px_8px]"></div>
-                <div className="text-3xl grayscale opacity-50 mb-2">{getCardIcon(currentPlayer.playedCard.effectType)}</div>
-                <div className="font-bold text-sm sm:text-base text-gray-500 text-center uppercase mb-1">{currentPlayer.playedCard.name}</div>
-                <div className="bg-gray-700 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">PLAYED</div>
+              <div className="flex-shrink-0 w-[140px] sm:w-[160px] h-[190px] sm:h-[220px] bg-gray-100 border-[3px] border-dashed border-gray-400 rounded-xl shadow-inner flex flex-col items-center justify-center p-3 sm:p-4 opacity-70 relative overflow-hidden saturate-50">
+                <div className="absolute inset-0 bg-gray-300 opacity-20 bg-[radial-gradient(#000_2px,transparent_2px)] [background-size:12px_12px] pointer-events-none"></div>
+                <div className="text-4xl grayscale opacity-50 mb-3 drop-shadow-sm">{getCardIcon(currentPlayer.playedCard.effectType)}</div>
+                <div className="font-extrabold text-sm sm:text-base text-gray-500 text-center uppercase mb-3 leading-tight">{currentPlayer.playedCard.name}</div>
+                <div className="bg-gray-800 text-white text-[10px] sm:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow">PLAYED</div>
               </div>
             )}
           </div>
