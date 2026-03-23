@@ -151,7 +151,7 @@ io.on('connection', (socket: Socket) => {
         color,
         score: 0,
         availableCards: starterHand,
-        playedCard: null,
+        playedCards: [],
         reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 },
         tokens: { wheat: 0, wine: 0, olive: 0, thyme: 0, cheese: 0 },
         isBot: false
@@ -197,7 +197,7 @@ io.on('connection', (socket: Socket) => {
       color: botColor,
       score: 0,
       availableCards: starterHand,
-      playedCard: null,
+      playedCards: [],
       reserves: { priests: 1, villages: 4, villagers: 5, forts: 3, ships: 2 },
       tokens: { wheat: 0, wine: 0, olive: 0, thyme: 0, cheese: 0 },
       isBot: true

@@ -652,12 +652,23 @@ function App() {
               );
             })}
             
-            {currentPlayer.playedCard && (
-              <div className="flex-shrink-0 w-[140px] sm:w-[160px] h-[190px] sm:h-[220px] bg-gray-100 border-[3px] border-dashed border-gray-400 rounded-xl shadow-inner flex flex-col items-center justify-center p-3 sm:p-4 opacity-70 relative overflow-hidden saturate-50">
-                <div className="absolute inset-0 bg-gray-300 opacity-20 bg-[radial-gradient(#000_2px,transparent_2px)] [background-size:12px_12px] pointer-events-none"></div>
-                <div className="text-4xl grayscale opacity-50 mb-3 drop-shadow-sm">{getCardIcon(currentPlayer.playedCard.effectType)}</div>
-                <div className="font-extrabold text-sm sm:text-base text-gray-500 text-center uppercase mb-3 leading-tight">{currentPlayer.playedCard.name}</div>
-                <div className="bg-gray-800 text-white text-[10px] sm:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow">PLAYED</div>
+            {currentPlayer.playedCards && currentPlayer.playedCards.length > 0 && (
+              <div className="flex-shrink-0 relative w-[140px] sm:w-[160px] h-[190px] sm:h-[220px]">
+                {currentPlayer.playedCards.map((playedCard: any, idx: number) => {
+                  const isTop = idx === currentPlayer.playedCards.length - 1;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`absolute top-0 left-0 w-full h-full bg-gray-100 border-[3px] border-dashed border-gray-400 rounded-xl shadow-md flex flex-col items-center justify-center p-3 sm:p-4 opacity-70 overflow-hidden saturate-50`}
+                      style={{ transform: `translate(${idx * 4}px, ${idx * -4}px)`, zIndex: idx }}
+                    >
+                      <div className="absolute inset-0 bg-gray-300 opacity-20 bg-[radial-gradient(#000_2px,transparent_2px)] [background-size:12px_12px] pointer-events-none"></div>
+                      <div className="text-4xl grayscale opacity-50 mb-3 drop-shadow-sm">{getCardIcon(playedCard.effectType)}</div>
+                      <div className="font-extrabold text-sm sm:text-base text-gray-500 text-center uppercase mb-3 leading-tight">{playedCard.name}</div>
+                      {isTop && <div className="bg-gray-800 text-white text-[10px] sm:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow">PLAYED</div>}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

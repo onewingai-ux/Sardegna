@@ -7,7 +7,7 @@ export interface Player {
   color: Color;
   score: number;
   availableCards: CharacterCard[];
-  playedCard: CharacterCard | null;
+  playedCards: CharacterCard[];
   // Track remaining pieces to place (if needed for setup or reserves)
   reserves: {
     priests: number;

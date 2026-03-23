@@ -201,7 +201,8 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
     if (cardIndex === -1) throw new Error("Card not found in hand");
 
     const card = player.availableCards.splice(cardIndex, 1)[0];
-    player.playedCard = card;
+    if (!player.playedCards) player.playedCards = [];
+    player.playedCards.push(card);
     
     state.log.push(`Player ${player.name} played ${card.name}`);
 
@@ -311,11 +312,11 @@ export function applyAction(state: GameState, action: PlayerAction): GameState {
            if (newCard) {
                // insert new card at index 1
                state.fortCardRow.splice(1, 0, newCard);
-               state.log.push(`${player?.name} rejected the card and revealed ${newCard.id}`);
+               state.log.push(`${player?.name} discarded ${rejectedCard.id} to the deck and replaced it with ${newCard.id}.`);
            }
         }
     } else {
-        state.log.push(`${player?.name} decided to keep the revealed card.`);
+        state.log.push(`${player?.name} decided to keep ${state.fortCardRow[1]?.id}.`);
     }
     
     // Add a new face down card to the right side of the row so we always have 11
@@ -364,15 +365,18 @@ function triggerSentinel(state: GameState): GameState {
 
   // Retrieve cards for all players
   state.players.forEach(p => {
-    if (p.playedCard) {
-      p.availableCards.push(p.playedCard);
-      p.playedCard = null;
+    if (p.playedCards && p.playedCards.length > 0) {
+      p.availableCards.push(...p.playedCards);
+      p.playedCards = [];
     }
   });
 
   // Discard leftmost, move it to bottom of deck
   const discarded = state.fortCardRow.shift();
-  if (discarded) state.fortCardDeck.push(discarded);
+  if (discarded) {
+      state.fortCardDeck.push(discarded);
+      state.log.push(`Scored card ${discarded.id} was discarded to the bottom of the deck.`);
+  }
   
   // Transition to reveal phase so active player can keep or reject the new leftmost card
   state.phase = 'sentinel_reveal';
