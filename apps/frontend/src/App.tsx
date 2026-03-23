@@ -243,9 +243,10 @@ function App() {
   const currentPlayer = gameState.players.find(p => p.id === playerId);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-gray-100">
       {/* Header / Score Track */}
-      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-3 shadow-lg border-b-4 border-yellow-500 flex flex-col md:flex-row justify-between items-center gap-3 z-50">
+      <header className="bg-gradient-to-r from-blue-950 via-blue-900 to-indigo-950 text-white p-3 sm:px-6 shadow-xl border-b-[6px] border-yellow-500 flex flex-col md:flex-row justify-between items-center gap-3 z-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
         <div className="flex items-center gap-3">
             <div className="bg-yellow-500 text-blue-900 font-black px-3 py-1 rounded shadow drop-shadow text-sm uppercase tracking-widest">
               Sardegna
@@ -260,16 +261,16 @@ function App() {
              const isMe = p.id === playerId;
              
              return (
-              <div key={p.id} className={`relative flex items-center gap-3 px-4 py-1.5 rounded-full border-2 transition-all duration-300 ${isTurn ? 'border-yellow-400 bg-black bg-opacity-40 shadow-[0_0_15px_rgba(250,204,21,0.3)] scale-105' : 'border-transparent bg-black bg-opacity-20'}`}>
-                <div className={`w-4 h-4 rounded-full ${bg} shadow-inner border border-white/50`}></div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold leading-tight">
-                    {p.name} {isMe && <span className="opacity-70 font-normal">(You)</span>}
+              <div key={p.id} className={`relative flex items-center gap-3 pl-3 pr-2 py-1.5 rounded-full border-[3px] transition-all duration-500 transform ${isTurn ? 'border-yellow-400 bg-gradient-to-r from-black/60 to-black/20 shadow-[0_0_20px_rgba(250,204,21,0.5)] scale-110 z-10' : 'border-transparent bg-black/20 hover:bg-black/30'}`}>
+                <div className={`w-5 h-5 rounded-full ${bg} shadow-[inset_0_-2px_4px_rgba(0,0,0,0.4)] border border-white/80 ring-2 ring-black/50`}></div>
+                <div className="flex flex-col min-w-[70px]">
+                  <span className="text-xs font-black tracking-wide leading-tight drop-shadow-md">
+                    {p.name} {isMe && <span className="text-[9px] text-blue-200 ml-1">(YOU)</span>}
                   </span>
-                  {isTurn && <span className="text-[9px] uppercase tracking-widest text-yellow-400 font-bold leading-none animate-pulse">Thinking...</span>}
+                  {isTurn && <span className="text-[9px] uppercase tracking-widest text-yellow-400 font-black leading-none animate-pulse mt-0.5">Thinking...</span>}
                 </div>
-                <div className="ml-2 bg-white text-gray-900 font-black px-2 py-0.5 rounded shadow text-sm">
-                  {p.score} <span className="text-[10px] text-gray-500">VP</span>
+                <div className="ml-1 bg-gradient-to-b from-white to-gray-200 text-blue-950 font-black px-2.5 py-1 rounded shadow-[inset_0_1px_0_white,0_2px_4px_rgba(0,0,0,0.3)] text-sm border border-gray-300">
+                  {p.score} <span className="text-[9px] text-gray-500 tracking-tighter">VP</span>
                 </div>
               </div>
             );
@@ -306,8 +307,9 @@ function App() {
         
         <div className="flex-grow flex flex-col lg:flex-row gap-2 sm:gap-4 overflow-y-auto lg:overflow-hidden w-full max-w-full">
           {/* Left: Board View */}
-          <div className="flex-grow bg-blue-100 rounded border border-blue-300 relative p-0 lg:p-4 overflow-hidden min-h-[300px] lg:min-h-[400px] flex justify-center items-center">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 absolute top-2 left-2 sm:top-4 sm:left-4 z-10">Board View</h2>
+          <div className="flex-grow bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] bg-[#0c2f4d] rounded-2xl border-4 border-[#2b5275] shadow-inner relative p-0 lg:p-4 overflow-hidden min-h-[300px] lg:min-h-[400px] flex justify-center items-center">
+          <div className="absolute inset-0 bg-blue-900/30 mix-blend-multiply pointer-events-none"></div>
+          <h2 className="text-xl sm:text-2xl font-black mb-4 absolute top-3 left-3 sm:top-4 sm:left-4 z-10 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-50 select-none">Sardegna</h2>
           
           
           {/* We now lock the SVG to the same aspect ratio container. The map image is rendered INSIDE the SVG to guarantee the coordinate system perfectly matches the pixels of the calibration. */}
@@ -446,26 +448,47 @@ function App() {
           </svg>
 
           {gameState.phase === 'lobby' && (
-            <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded shadow z-20 text-center">
-              <h3 className="text-lg font-bold mb-2">Lobby</h3>
-              <p className="mb-4">{gameState.players.length}/4 Players Joined</p>
-              <div className="flex justify-center gap-2">
-                {gameState.players.length < 4 && (
-                  <button 
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                    onClick={addBot}
-                  >
-                    Add Bot
-                  </button>
-                )}
-                {gameState.players.length >= 2 && (
-                  <button 
-                    className="bg-green-500 text-white px-4 py-2 rounded"
-                    onClick={startGame}
-                  >
-                    Start Game
-                  </button>
-                )}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex flex-col items-center justify-center overflow-hidden">
+              <div className="bg-white/90 backdrop-blur border border-white/20 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
+                <h3 className="text-3xl font-black text-center mb-2 text-blue-900 tracking-tight">Sardegna Lobby</h3>
+                <p className="text-center text-gray-500 mb-6 font-medium">Waiting for players to join... ({gameState.players.length}/4)</p>
+                
+                <div className="space-y-3 mb-8">
+                  {gameState.players.map((p, i) => (
+                    <div key={p.id} className="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm transition hover:shadow-md">
+                      <div className={`w-8 h-8 rounded-full shadow-inner border-2 border-white flex items-center justify-center text-white font-bold text-xs ${p.color === 'red' ? 'bg-red-500' : p.color === 'blue' ? 'bg-blue-500' : p.color === 'green' ? 'bg-green-500' : 'bg-yellow-400 text-yellow-900'}`}>P{i+1}</div>
+                      <div className="flex-1 font-bold text-gray-800">{p.name} {p.id === playerId && <span className="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full ml-2 font-black">YOU</span>}</div>
+                      {p.isBot && <div className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-md font-bold uppercase tracking-wider">BOT</div>}
+                    </div>
+                  ))}
+                  
+                  {/* Empty slots placeholders */}
+                  {Array.from({ length: 4 - gameState.players.length }).map((_, i) => (
+                    <div key={`empty-${i}`} className="flex items-center gap-4 bg-gray-50/50 p-3 rounded-xl border border-dashed border-gray-300 opacity-60">
+                      <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+                      <div className="flex-1 font-medium text-gray-400 italic">Waiting for player...</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-center gap-3">
+                  {gameState.players.length < 4 && (
+                    <button 
+                      className="flex-1 bg-gradient-to-b from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-bold px-4 py-3 rounded-xl shadow-lg border border-blue-400/50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                      onClick={addBot}
+                    >
+                      <span>🤖</span> Add Bot
+                    </button>
+                  )}
+                  {gameState.players.length >= 2 && (
+                    <button 
+                      className="flex-1 bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold px-4 py-3 rounded-xl shadow-lg border border-green-400/50 transition-all active:scale-95 flex items-center justify-center gap-2 text-lg"
+                      onClick={startGame}
+                    >
+                      <span>⛵</span> Start Game
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -509,11 +532,11 @@ function App() {
       </main>
 
       {/* Footer / Player Hand */}
-      <footer className="bg-gray-200 p-2 border-t h-auto sm:h-48 flex flex-col justify-center items-center z-40 relative flex-shrink-0">
+      <footer className="bg-white/80 backdrop-blur-md p-2 border-t-2 border-white/50 h-auto sm:h-56 flex flex-col justify-start sm:justify-center items-center z-40 relative flex-shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
         {gameState.activePlayerId === playerId ? (
-          <div className="text-green-600 font-bold mb-2 text-sm sm:text-base">It's your turn!</div>
+          <div className="text-green-600 font-black mb-1 sm:mb-2 text-sm sm:text-base flex items-center gap-2 animate-bounce-slow">✨ YOUR TURN ✨</div>
         ) : (
-          <div className="text-gray-500 mb-2 text-sm sm:text-base">Waiting for other players...</div>
+          <div className="text-gray-500 font-bold mb-1 sm:mb-2 text-xs sm:text-sm uppercase tracking-widest">Waiting for other players...</div>
         )}
         
         {currentPlayer && (
