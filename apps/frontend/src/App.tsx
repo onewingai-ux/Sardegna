@@ -114,6 +114,20 @@ function App() {
   };
 
   
+
+  const getCardIcon = (effectType: string) => {
+    switch(effectType) {
+      case 'move_priest': return '🔺';
+      case 'sentinel': return '🛡️';
+      case 'place_villager': return '🧑‍🌾';
+      case 'place_village': return '🏘️';
+      case 'place_ship': return '⛵';
+      case 'place_fort': return '🏰';
+      case 'take_token': return '🌾';
+      default: return '🃏';
+    }
+  };
+
   const addBot = () => {
     if (!gameState) return;
     socket.emit('addBot', { gameId: gameState.id });
@@ -231,15 +245,35 @@ function App() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header / Score Track */}
-      <header className="bg-blue-900 text-white p-4 flex flex-col md:flex-row justify-between items-center gap-2">
-        <h1 className="text-xl font-bold">Game: {gameState.id}</h1>
-        <div className="flex flex-wrap justify-center gap-4">
-          {gameState.players.map(p => (
-            <div key={p.id} className="flex flex-col items-center">
-              <span className="text-sm">{p.name} ({p.color})</span>
-              <span className="font-bold text-lg">{p.score} VP</span>
+      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-3 shadow-lg border-b-4 border-yellow-500 flex flex-col md:flex-row justify-between items-center gap-3 z-50">
+        <div className="flex items-center gap-3">
+            <div className="bg-yellow-500 text-blue-900 font-black px-3 py-1 rounded shadow drop-shadow text-sm uppercase tracking-widest">
+              Sardegna
             </div>
-          ))}
+            <span className="text-sm opacity-80 font-mono bg-black bg-opacity-30 px-2 py-0.5 rounded">ID: {gameState.id}</span>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3">
+          {gameState.players.map(p => {
+             const colorMap: Record<string, string> = { red: 'bg-red-500', blue: 'bg-blue-500', yellow: 'bg-yellow-400', green: 'bg-green-500' };
+             const bg = colorMap[p.color] || 'bg-gray-500';
+             const isTurn = gameState.activePlayerId === p.id;
+             const isMe = p.id === playerId;
+             
+             return (
+              <div key={p.id} className={`relative flex items-center gap-3 px-4 py-1.5 rounded-full border-2 transition-all duration-300 ${isTurn ? 'border-yellow-400 bg-black bg-opacity-40 shadow-[0_0_15px_rgba(250,204,21,0.3)] scale-105' : 'border-transparent bg-black bg-opacity-20'}`}>
+                <div className={`w-4 h-4 rounded-full ${bg} shadow-inner border border-white/50`}></div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold leading-tight">
+                    {p.name} {isMe && <span className="opacity-70 font-normal">(You)</span>}
+                  </span>
+                  {isTurn && <span className="text-[9px] uppercase tracking-widest text-yellow-400 font-bold leading-none animate-pulse">Thinking...</span>}
+                </div>
+                <div className="ml-2 bg-white text-gray-900 font-black px-2 py-0.5 rounded shadow text-sm">
+                  {p.score} <span className="text-[10px] text-gray-500">VP</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </header>
 
@@ -277,16 +311,25 @@ function App() {
           
           
           {/* We now lock the SVG to the same aspect ratio container. The map image is rendered INSIDE the SVG to guarantee the coordinate system perfectly matches the pixels of the calibration. */}
-          <svg className="w-full h-full max-w-[800px] max-h-[800px] absolute inset-0 m-auto" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
-            <image href={mapImage} x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.8" />
+          <svg className="w-full h-full max-w-[800px] max-h-[800px] absolute inset-0 m-auto drop-shadow-xl" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <filter id="tokenShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="2" dy="4" stdDeviation="3" floodOpacity="0.5" />
+              </filter>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="white" floodOpacity="0.8" />
+              </filter>
+            </defs>
+            
+            <image href={mapImage} x="0" y="0" width="800" height="800" preserveAspectRatio="xMidYMid meet" opacity="0.9" />
                                     {/* Draw harbors */}
             {Object.values(gameState.harbors || {}).map((harbor) => {
               const p = HARBOR_COORDS[harbor.id as keyof typeof HARBOR_COORDS];
               if (!p) return null;
               
               return (
-                <g key={harbor.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(harbor.id, 'harbor')} style={{cursor: selectedCardId ? 'crosshair' : 'default'}}>
-                  <circle cx="0" cy="0" r="20" fill="transparent" />
+                <g key={harbor.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(harbor.id, 'harbor')} style={{cursor: 'pointer', touchAction: 'manipulation'}} filter={selectedCardId ? 'url(#glow)' : ''} className={selectedCardId ? 'animate-pulse hover:opacity-75 transition' : ''}>
+                  <circle cx="0" cy="0" r="20" fill="transparent" style={{cursor: "pointer", pointerEvents: "all"}} />
                   
                   {/* Any placed ships */}
                   {harbor.ships?.map((piece: any, idx: number) => {
@@ -294,7 +337,7 @@ function App() {
                     const colorMap: Record<string, string> = { red: '#ef4444', blue: '#3b82f6', yellow: '#facc15', green: '#22c55e' };
                     const fill = colorMap[owner?.color || 'red'];
                     return (
-                      <ellipse key={idx} cx={-8 + (idx * 16)} cy="0" rx="8" ry="4" fill={fill} stroke="white" strokeWidth="1" />
+                      <ellipse key={idx} cx={-8 + (idx * 16)} cy="0" rx="8" ry="4" fill={fill} stroke="white" strokeWidth="1" filter="url(#tokenShadow)" />
                     );
                   })}
                 </g>
@@ -307,9 +350,9 @@ function App() {
               if (!p) return null;
               
               return (
-                <g key={fortSpace.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(fortSpace.id, 'fortSpace')} style={{cursor: selectedCardId ? 'crosshair' : 'default'}}>
+                <g key={fortSpace.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(fortSpace.id, 'fortSpace')} style={{cursor: 'pointer', touchAction: 'manipulation'}} filter={selectedCardId ? 'url(#glow)' : ''} className={selectedCardId ? 'animate-pulse hover:opacity-75 transition' : ''}>
                   {/* Small fort marker removed per user request */}
-                  <circle cx="0" cy="0" r="15" fill="transparent" />
+                  <circle cx="0" cy="0" r="20" fill="transparent" style={{cursor: "pointer", pointerEvents: "all"}} />
                   
                   {/* Any placed fort pieces */}
                   {fortSpace.forts?.map((piece: any, idx: number) => {
@@ -317,7 +360,7 @@ function App() {
                     const colorMap: Record<string, string> = { red: '#ef4444', blue: '#3b82f6', yellow: '#facc15', green: '#22c55e' };
                     const fill = colorMap[owner?.color || 'red'];
                     return (
-                      <rect key={idx} x={-6 + (idx * 4)} y={-6 + (idx * 4)} width="12" height="12" fill={fill} stroke="white" strokeWidth="1" rx="1" />
+                      <rect key={idx} x={-6 + (idx * 4)} y={-6 + (idx * 4)} width="12" height="12" fill={fill} stroke="white" strokeWidth="1" rx="1" filter="url(#tokenShadow)" />
                     );
                   })}
                 </g>
@@ -332,10 +375,10 @@ function App() {
               
 
               return (
-                <g key={province.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(province.id, 'province')} style={{cursor: selectedCardId ? 'crosshair' : 'default'}}>
+                <g key={province.id} transform={`translate(${p.x}, ${p.y})`} onClick={() => handleMapClick(province.id, 'province')} style={{cursor: 'pointer', touchAction: 'manipulation'}} filter={selectedCardId ? 'url(#glow)' : ''} className={selectedCardId ? 'animate-pulse hover:opacity-75 transition' : ''}>
                   {/* We only draw the pieces directly over the map coordinate */}
                   {/* Center the pieces grid relative to the coordinate */}
-                  <circle cx="0" cy="0" r="25" fill="transparent" />
+                  <circle cx="0" cy="0" r="30" fill="transparent" style={{cursor: "pointer", pointerEvents: "all"}} />
                   
                   {/* Render the specific token using an emoji if available */}
                   {(province.hasAgricultureToken || province.hasAgricultureToken === undefined) && (
@@ -346,7 +389,7 @@ function App() {
                         province.specificToken === 'olive' ? '#86efac' : 
                         province.specificToken === 'thyme' ? '#fdba74' : 
                         province.specificToken === 'cheese' ? '#fef08a' : '#ccc'
-                      } stroke="black" strokeWidth="2" />
+                      } stroke="black" strokeWidth="2" filter="url(#tokenShadow)" />
                       <text x="0" y="4" textAnchor="middle" fontSize="12px">
                          {province.specificToken === 'wheat' ? '🌾' : 
                           province.specificToken === 'wine' ? '🍇' : 
@@ -387,13 +430,13 @@ function App() {
                       
                       if (piece.type === 'village') {
                         // Village = Cube (Square)
-                        return <rect key={idx} x={x - 5} y={y - 5} width="10" height="10" fill={fill} stroke="white" strokeWidth="1"><title>{piece.type} ({owner?.name})</title></rect>;
+                        return <rect key={idx} x={x - 5} y={y - 5} width="10" height="10" fill={fill} stroke="white" strokeWidth="1" filter="url(#tokenShadow)"><title>{piece.type} ({owner?.name})</title></rect>;
                       } else if (piece.type === 'priest') {
                         // Priest = Cylinder (Triangle)
-                        return <polygon key={idx} points={`${x},${y - 6} ${x - 5},${y + 5} ${x + 5},${y + 5}`} fill={fill} stroke="white" strokeWidth="1"><title>{piece.type} ({owner?.name})</title></polygon>;
+                        return <polygon key={idx} points={`${x},${y - 6} ${x - 5},${y + 5} ${x + 5},${y + 5}`} fill={fill} stroke="white" strokeWidth="1" filter="url(#tokenShadow)"><title>{piece.type} ({owner?.name})</title></polygon>;
                       } else {
                         // Villager = Disc (Circle)
-                        return <circle key={idx} cx={x} cy={y} r="5" fill={fill} stroke="white" strokeWidth="1"><title>{piece.type} ({owner?.name})</title></circle>;
+                        return <circle key={idx} cx={x} cy={y} r="5" fill={fill} stroke="white" strokeWidth="1" filter="url(#tokenShadow)"><title>{piece.type} ({owner?.name})</title></circle>;
                       }
                     })}
                   </g>
@@ -475,24 +518,44 @@ function App() {
         
         {currentPlayer && (
           <div className="flex gap-2 sm:gap-4 items-center overflow-x-auto overflow-y-hidden w-full max-w-full px-2 sm:px-4 pb-2 justify-start sm:justify-center" style={{ WebkitOverflowScrolling: 'touch' }}>
-            {currentPlayer.availableCards.map(card => (
+            {currentPlayer.availableCards.map(card => {
+              const isSelected = selectedCardId === card.id;
+              return (
               <button
                 key={card.id}
                 disabled={gameState.activePlayerId !== playerId || gameState.phase !== 'playing'}
                 onClick={() => playCard(card)}
-                className="flex-shrink-0 w-32 h-40 bg-white border-2 border-gray-400 rounded-lg shadow hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex flex-col p-2"
+                className={`flex-shrink-0 w-32 sm:w-36 h-44 sm:h-52 bg-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex flex-col items-center justify-between p-3 transition-all duration-200 relative overflow-hidden border-[3px] 
+                  ${isSelected ? 'border-yellow-400 -translate-y-4 shadow-[0_8px_20px_rgba(250,204,21,0.4)]' : 'border-gray-200 hover:-translate-y-2 hover:shadow-[0_8px_16px_rgba(0,0,0,0.2)] hover:border-blue-300'} 
+                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] disabled:hover:border-gray-200`}
               >
-                <div className="font-bold text-sm text-center border-b pb-1 mb-1">{card.name}</div>
-                <div className="text-xs text-gray-600 flex-grow">{card.effectDescription}</div>
-                <div className="text-xs font-mono text-gray-400 text-right">{card.effectType}</div>
+                {/* Decorative card header */}
+                <div className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-blue-100 to-transparent"></div>
+                
+                <div className="z-10 flex flex-col items-center w-full">
+                  <div className="text-2xl mb-1 drop-shadow-md">{getCardIcon(card.effectType)}</div>
+                  <div className="font-extrabold text-sm sm:text-base text-gray-800 text-center uppercase tracking-wide border-b border-gray-300 w-full pb-1 mb-2">{card.name}</div>
+                </div>
+                
+                <div className="text-[10px] sm:text-xs text-gray-600 flex-grow flex items-center text-center font-medium leading-snug px-1">
+                   {card.effectDescription}
+                </div>
+                
+                {isSelected && card.effectType !== 'sentinel' && (
+                   <div className="absolute bottom-0 left-0 w-full bg-yellow-400 text-yellow-900 text-[10px] font-bold py-1 text-center animate-pulse">
+                     CLICK MAP TARGET
+                   </div>
+                )}
               </button>
-            ))}
+              );
+            })}
             
             {currentPlayer.playedCard && (
-              <div className="flex-shrink-0 w-32 h-40 bg-blue-100 border-2 border-blue-400 rounded-lg shadow flex flex-col p-2 opacity-75">
-                <div className="font-bold text-sm text-center border-b pb-1 mb-1 text-blue-900">{currentPlayer.playedCard.name}</div>
-                <div className="text-xs text-blue-700 flex-grow">{currentPlayer.playedCard.effectDescription}</div>
-                <div className="text-xs font-bold text-blue-800 text-center uppercase mt-auto pb-1">PLAYED</div>
+              <div className="flex-shrink-0 w-32 sm:w-36 h-44 sm:h-52 bg-gray-100 border-[3px] border-dashed border-gray-400 rounded-xl shadow-inner flex flex-col items-center justify-center p-3 opacity-60 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gray-300 opacity-20 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:8px_8px]"></div>
+                <div className="text-3xl grayscale opacity-50 mb-2">{getCardIcon(currentPlayer.playedCard.effectType)}</div>
+                <div className="font-bold text-sm sm:text-base text-gray-500 text-center uppercase mb-1">{currentPlayer.playedCard.name}</div>
+                <div className="bg-gray-700 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">PLAYED</div>
               </div>
             )}
           </div>
