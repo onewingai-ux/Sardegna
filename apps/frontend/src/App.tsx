@@ -78,6 +78,7 @@ function App() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDraggingMap, setIsDraggingMap] = useState(false);
   const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     // Basic session persistence
@@ -554,9 +555,18 @@ function App() {
         </div>
 
         {/* Right: Fort Cards & Logs */}
-        <div className="w-full lg:w-72 flex flex-col gap-4 flex-shrink-0 z-20">
+        <div className={`w-full lg:w-72 flex flex-col gap-4 flex-shrink-0 z-20 transition-all duration-300 ${isSidebarCollapsed ? 'max-h-[40px] lg:max-h-full overflow-hidden lg:overflow-visible' : 'max-h-[800px]'}`}>
+           {/* Mobile Collapse Toggle */}
+           <button 
+             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+             className="lg:hidden w-full bg-blue-900 text-white font-bold py-2 rounded-lg shadow-md flex justify-between items-center px-4"
+           >
+             <span>🏰 Forts & Logs</span>
+             <span>{isSidebarCollapsed ? '▼ Expand' : '▲ Collapse'}</span>
+           </button>
+
            {/* Fort Cards Compact View */}
-           <div className="bg-white rounded-lg shadow-md border-t-4 border-orange-400 overflow-hidden flex flex-col flex-shrink-0">
+           <div className={`bg-white rounded-lg shadow-md border-t-4 border-orange-400 overflow-hidden flex-col flex-shrink-0 ${isSidebarCollapsed ? 'hidden lg:flex' : 'flex'}`}>
              <div className="bg-orange-50 px-4 py-2 border-b flex justify-between items-center text-sm font-bold text-orange-900">
                <span>🏰 Fort Cards</span>
              </div>
@@ -589,7 +599,7 @@ function App() {
            </div>
 
            {/* Log View */}
-           <div className="bg-white rounded-lg shadow-md border-t-4 border-gray-400 flex-grow overflow-hidden flex flex-col min-h-[200px]">
+           <div className={`bg-white rounded-lg shadow-md border-t-4 border-gray-400 flex-grow overflow-hidden flex-col min-h-[200px] ${isSidebarCollapsed ? 'hidden lg:flex' : 'flex'}`}>
              <div className="bg-gray-50 px-4 py-2 border-b text-sm font-bold text-gray-700 flex justify-between items-center">
                <span>📜 Game Log</span>
                <span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded text-gray-600">Event {gameState.scoringEventsCount}/11</span>
