@@ -164,10 +164,17 @@ function App() {
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomSensitivity = 0.05;
-    const delta = e.deltaY > 0 ? -zoomSensitivity : zoomSensitivity;
-    setScale(s => Math.min(Math.max(0.5, s + delta), 3)); // Restrict between 0.5x and 3x zoom
+    // Determine scroll direction and magnitude
+    // e.deltaY is usually 100 for a typical mouse wheel click
+    const direction = e.deltaY < 0 ? 1 : -1;
+    
+    // Scale exponentially rather than linearly to make zooming feel natural
+    const zoomFactor = 1.15; // 15% zoom per tick
+    
+    setScale(s => {
+       let newScale = direction > 0 ? s * zoomFactor : s / zoomFactor;
+       return Math.min(Math.max(0.5, newScale), 5); // Restrict between 0.5x and 5x zoom
+    });
   };
 
   const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
@@ -361,9 +368,9 @@ function App() {
           <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 flex flex-col gap-2">
               <h2 className="text-xl sm:text-2xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-50 select-none pointer-events-none">Sardegna</h2>
               <div className="flex gap-2 bg-black/40 p-1.5 rounded-lg backdrop-blur-sm pointer-events-auto">
-                 <button onClick={() => setScale(s => Math.min(3, s + 0.2))} className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded font-bold transition">+</button>
+                 <button onClick={() => setScale(s => Math.min(5, s * 1.5))} className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded font-bold transition">+</button>
                  <button onClick={() => { setScale(1); setPan({x:0, y:0}); }} className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded font-bold transition">⟲</button>
-                 <button onClick={() => setScale(s => Math.max(0.5, s - 0.2))} className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded font-bold transition">-</button>
+                 <button onClick={() => setScale(s => Math.max(0.5, s / 1.5))} className="w-8 h-8 flex items-center justify-center bg-white/20 hover:bg-white/40 text-white rounded font-bold transition">-</button>
               </div>
           </div>
           
