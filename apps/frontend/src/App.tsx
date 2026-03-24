@@ -611,12 +611,7 @@ function App() {
       </main>
 
       {/* Footer / Player Hand */}
-      <footer className="bg-white/80 backdrop-blur-md pt-2 pb-4 border-t-2 border-white/50 flex flex-col justify-start sm:justify-center items-center z-40 relative flex-shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
-        {gameState.activePlayerId === playerId ? (
-          <div className="text-green-600 font-black mb-1 sm:mb-2 text-sm sm:text-base flex items-center gap-2 animate-bounce-slow">✨ YOUR TURN ✨</div>
-        ) : (
-          <div className="text-gray-500 font-bold mb-1 sm:mb-2 text-xs sm:text-sm uppercase tracking-widest">Waiting for other players...</div>
-        )}
+      <footer className="bg-white/80 backdrop-blur-md border-t-2 border-white/50 flex flex-col justify-start sm:justify-center items-center z-40 relative flex-shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
         
         {currentPlayer && (
           <div className="flex gap-3 sm:gap-4 items-stretch overflow-x-auto w-full max-w-full px-4 pt-2 pb-4 justify-start md:justify-center min-h-[170px] sm:min-h-[180px]" style={{ WebkitOverflowScrolling: 'touch' }}>
