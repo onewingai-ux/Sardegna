@@ -619,7 +619,7 @@ function App() {
         )}
         
         {currentPlayer && (
-          <div className="flex gap-3 sm:gap-4 items-stretch overflow-x-auto w-full max-w-full px-4 pt-4 pb-6 justify-start md:justify-center min-h-[220px]" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-3 sm:gap-4 items-stretch overflow-x-auto w-full max-w-full px-4 pt-2 pb-4 justify-start md:justify-center min-h-[170px] sm:min-h-[180px]" style={{ WebkitOverflowScrolling: 'touch' }}>
             {currentPlayer.availableCards.map(card => {
               const isSelected = selectedCardId === card.id;
               return (
@@ -627,25 +627,25 @@ function App() {
                 key={card.id}
                 disabled={gameState.activePlayerId !== playerId || gameState.phase !== 'playing'}
                 onClick={() => playCard(card)}
-                className={`flex-shrink-0 w-[140px] sm:w-[160px] h-[190px] sm:h-[220px] bg-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex flex-col items-center justify-start p-3 sm:p-4 transition-all duration-200 relative overflow-hidden border-[3px] 
-                  ${isSelected ? 'border-yellow-400 -translate-y-4 shadow-[0_8px_20px_rgba(250,204,21,0.4)]' : 'border-gray-200 hover:-translate-y-2 hover:shadow-[0_8px_16px_rgba(0,0,0,0.2)] hover:border-blue-300'} 
+                className={`flex-shrink-0 w-[120px] sm:w-[130px] h-[150px] sm:h-[160px] bg-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex flex-col items-center justify-start p-2 transition-all duration-200 relative overflow-hidden border-[3px] 
+                  ${isSelected ? 'border-yellow-400 -translate-y-2 shadow-[0_8px_20px_rgba(250,204,21,0.4)]' : 'border-gray-200 hover:-translate-y-1 hover:shadow-[0_6px_12px_rgba(0,0,0,0.2)] hover:border-blue-300'} 
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] disabled:hover:border-gray-200`}
               >
                 {/* Decorative card header */}
-                <div className="absolute top-0 left-0 w-full h-10 bg-gradient-to-b from-blue-100 to-transparent pointer-events-none"></div>
+                <div className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-blue-100 to-transparent pointer-events-none"></div>
                 
-                <div className="z-10 flex flex-col items-center w-full mb-auto mt-1">
-                  <div className="text-3xl mb-1 drop-shadow-sm">{getCardIcon(card.effectType)}</div>
-                  <div className="font-extrabold text-xs sm:text-sm text-gray-800 text-center uppercase tracking-wide border-b-2 border-gray-200 w-full pb-1 mb-2 leading-tight min-h-[30px] flex items-center justify-center">{card.name}</div>
+                <div className="z-10 flex flex-col items-center w-full mb-auto mt-0.5">
+                  <div className="text-2xl sm:text-3xl mb-0.5 drop-shadow-sm">{getCardIcon(card.effectType)}</div>
+                  <div className="font-extrabold text-[10px] sm:text-xs text-gray-800 text-center uppercase tracking-wide border-b border-gray-200 w-full pb-0.5 mb-1 leading-tight min-h-[24px] flex items-center justify-center">{card.name}</div>
                 </div>
                 
-                <div className="text-[10px] sm:text-xs text-gray-600 w-full text-center font-medium leading-snug px-1 line-clamp-4">
+                <div className="text-[9px] sm:text-[10px] text-gray-600 w-full text-center font-medium leading-snug px-0.5 line-clamp-3">
                    {card.effectDescription}
                 </div>
                 
                 {isSelected && card.effectType !== 'sentinel' && (
-                   <div className="absolute bottom-0 left-0 w-full bg-yellow-400 text-yellow-900 text-[10px] sm:text-xs font-bold py-1.5 text-center animate-pulse shadow-inner">
-                     CLICK TARGET
+                   <div className="absolute bottom-0 left-0 w-full bg-yellow-400 text-yellow-900 text-[9px] font-bold py-1 text-center animate-pulse shadow-inner">
+                     CLICK MAP
                    </div>
                 )}
               </button>
@@ -653,19 +653,19 @@ function App() {
             })}
             
             {currentPlayer.playedCards && currentPlayer.playedCards.length > 0 && (
-              <div className="flex-shrink-0 relative w-[140px] sm:w-[160px] h-[190px] sm:h-[220px]">
+              <div className="flex-shrink-0 relative w-[120px] sm:w-[130px] h-[150px] sm:h-[160px]">
                 {currentPlayer.playedCards.map((playedCard: any, idx: number) => {
                   const isTop = idx === currentPlayer.playedCards.length - 1;
                   return (
                     <div 
                       key={idx} 
-                      className={`absolute top-0 left-0 w-full h-full bg-gray-100 border-[3px] border-dashed border-gray-400 rounded-xl shadow-md flex flex-col items-center justify-center p-3 sm:p-4 opacity-70 overflow-hidden saturate-50`}
+                      className={`absolute top-0 left-0 w-full h-full bg-gray-100 border-[3px] border-dashed border-gray-400 rounded-xl shadow-md flex flex-col items-center justify-center p-2 opacity-70 overflow-hidden saturate-50`}
                       style={{ transform: `translate(${idx * 4}px, ${idx * -4}px)`, zIndex: idx }}
                     >
-                      <div className="absolute inset-0 bg-gray-300 opacity-20 bg-[radial-gradient(#000_2px,transparent_2px)] [background-size:12px_12px] pointer-events-none"></div>
-                      <div className="text-4xl grayscale opacity-50 mb-3 drop-shadow-sm">{getCardIcon(playedCard.effectType)}</div>
-                      <div className="font-extrabold text-sm sm:text-base text-gray-500 text-center uppercase mb-3 leading-tight">{playedCard.name}</div>
-                      {isTop && <div className="bg-gray-800 text-white text-[10px] sm:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow">PLAYED</div>}
+                      <div className="absolute inset-0 bg-gray-300 opacity-20 bg-[radial-gradient(#000_2px,transparent_2px)] [background-size:10px_10px] pointer-events-none"></div>
+                      <div className="text-3xl grayscale opacity-50 mb-2 drop-shadow-sm">{getCardIcon(playedCard.effectType)}</div>
+                      <div className="font-extrabold text-xs sm:text-sm text-gray-500 text-center uppercase mb-2 leading-tight">{playedCard.name}</div>
+                      {isTop && <div className="bg-gray-800 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow">PLAYED</div>}
                     </div>
                   );
                 })}
