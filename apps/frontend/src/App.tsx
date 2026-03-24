@@ -507,12 +507,12 @@ function App() {
           </svg>
 
           {gameState.phase === 'lobby' && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex flex-col items-center justify-center overflow-hidden">
-              <div className="bg-white/90 backdrop-blur border border-white/20 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
-                <h3 className="text-3xl font-black text-center mb-2 text-blue-900 tracking-tight">Sardegna Lobby</h3>
-                <p className="text-center text-gray-500 mb-6 font-medium">Waiting for players to join... ({gameState.players.length}/4)</p>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex flex-col items-center justify-center overflow-hidden p-4">
+              <div className="bg-white/90 backdrop-blur border border-white/20 p-5 sm:p-8 rounded-2xl shadow-2xl max-w-md w-full mx-auto transform transition-all max-h-[90vh] overflow-y-auto">
+                <h3 className="text-2xl sm:text-3xl font-black text-center mb-1 sm:mb-2 text-blue-900 tracking-tight">Sardegna Lobby</h3>
+                <p className="text-center text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base font-medium">Waiting for players to join... ({gameState.players.length}/4)</p>
                 
-                <div className="space-y-3 mb-8">
+                <div className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                   {gameState.players.map((p, i) => (
                     <div key={p.id} className="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm transition hover:shadow-md">
                       <div className={`w-8 h-8 rounded-full shadow-inner border-2 border-white flex items-center justify-center text-white font-bold text-xs ${p.color === 'red' ? 'bg-red-500' : p.color === 'blue' ? 'bg-blue-500' : p.color === 'green' ? 'bg-green-500' : 'bg-yellow-400 text-yellow-900'}`}>P{i+1}</div>
