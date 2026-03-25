@@ -104,6 +104,15 @@ function App() {
     };
   }, []);
 
+  // Sync browser title
+  useEffect(() => {
+    if (gameState && gameState.id) {
+      document.title = `Sardegna [${gameState.id}]`;
+    } else {
+      document.title = 'Sardegna';
+    }
+  }, [gameState?.id]);
+
   const createGame = async () => {
     const res = await fetch('/api/games', { method: 'POST' });
     const data = await res.json();
