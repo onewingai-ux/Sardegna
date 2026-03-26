@@ -193,7 +193,7 @@ io.on('connection', (socket: Socket) => {
 
     game.players.push({
       id: botId,
-      name: `Bot ${botId.substring(4)}`,
+      name: `${["Efisio", "Eleonora", "Gavino", "Salvatore", "Grazia", "Antonio", "Maria", "Giovanni", "Luigi", "Francesco"][Math.floor(Math.random() * 10)]} 🤖`,
       color: botColor,
       score: 0,
       availableCards: starterHand,
